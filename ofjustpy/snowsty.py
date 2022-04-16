@@ -26,7 +26,7 @@ subheading_box = [db.f, jc.around]
 subheading_text = [*h2, fw.bold, bsw.sm,
                    sw/slate/"500/50"]  # "prose", "prose-2xl"
 
-subsubheading_text = [*h3, fw.medium, bsw.xl,
+subsubheading_text = [*h3, fw.medium, bsw.lg,
                       sw/slate/"500/80"]  # "prose", "prose-2xl"
 
 spacing = [pd/1]
@@ -34,10 +34,11 @@ centering_div = [db.f, jc.center]
 span = [base, fw.light, relaxed, *spacing, ]
 form = [db.f, jc.center]
 theme = []  # default background, font, border, etc stuff
-P = []
-A = []
+P = [*spacing]
+A = [*spacing]
 stackv = [db.f, flx.col]
-
+stackh = [db.f, *spacing]
+stackw = [db.f, flx.wrap, jc.center, ]
 # ================ copied from fancy str--using empty ================
 _ = dbr = Dict()
 _.banner = []
@@ -93,7 +94,7 @@ textarea = [fz.sm, fw.bold, fc/gray/6, bg/gray/1, opacity/80,
 
 textinput = [db.f, jc.center, bt.bd, bdr.md, bd/gray/1]
 input = [bg/gray/1, opacity/80]
-stackW = [db.f, flx.wrap, jc.center, ]
+
 
 cell = [fc/gray/6, fz.xl, pd/1, bg/gray/2]
 
