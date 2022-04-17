@@ -9,6 +9,11 @@ def launcher(request):
 
     def on_btn_click(dbref, msg):
         print("circle clicked", dbref.text, msg.value)
+
+        pass
+
+    def on_input_change(dbref, msg):
+        print("on input called", msg.value)
         pass
 
     def stubs():
@@ -22,26 +27,40 @@ def launcher(request):
                   oj.WithBanner_("labeled", "mybtn",
                                  oj.P_("mypara", text="hello heloo ")),
                   oj.Button_("mybtn", value="myval",
-                             text="Click me ", pcp=[bg/blue/100/50]).event_handle(oj.click, on_btn_click)
+                             text="Click me ", pcp=[bg/blue/100/50]).event_handle(oj.click, on_btn_click),
+                  oj.InputChangeOnly_("ico", placeholder="haan"),
+                  oj.Input_("inp", placeholder="hoon", type="number"),
+                  oj.LabeledInput_("linp", "Enter a value",
+                                   "avalue", pcp=[fc/green/800]).event_handle(oj.change, on_input_change),
+                  oj.CheckboxInput_(
+                      "cboxinp", "selected text", pcp=[bg/rose/100]).event_handle(oj.change, on_input_change),
+                  oj.Textarea_("textarea", text="lets put lots of text lets put lots of text lets put lots of textlets put lots of text").event_handle(
+                      oj.change, on_input_change),
+
+                  oj.KeyValue_("keyvalue", "akeya", "itsvalue"),
+                  oj.Option_("myopt", text="choice", value="value"),
+                  oj.Select_("myselect", [oj.Option_(
+                      k, text=k, value=k) for k in ['red', 'blue', 'green']], text="def", value="def").event_handle(oj.click, on_btn_click),
+                  oj.Slider_("myslider", range(5), pcp=[bg/yellow/1])
                   ]:
             yield _
 
     mystackv = oj.Halign_(oj.StackV_(
         "mystackv", cgens=[oj.Halign_(stub) for stub in stubs()]))
-    mystackh = oj.Halign_(oj.StackH_(
-        "mystackh", cgens=[oj.Halign_(stub) for stub in stubs()]))
+    # mystackh = oj.Halign_(oj.StackH_(
+    #     "mystackh", cgens=[oj.Halign_(stub) for stub in stubs()]))
 
-    mystackw = oj.Halign_(oj.StackW_(
-        "mystackh", cgens=[oj.Halign_(stub) for stub in stubs()]))
+    # mystackw = oj.Halign_(oj.StackW_(
+    #     "mystackh", cgens=[oj.Halign_(stub) for stub in stubs()]))
 
-    mystackg = oj.Halign_(oj.StackG_(
-        "mystackh", num_rows=3, num_cols=3,  cgens=[oj.Halign_(stub) for stub in stubs()]))
-    mystackh(wp)
+    # mystackg = oj.Halign_(oj.StackG_(
+    #     "mystackh", num_rows=3, num_cols=3,  cgens=[oj.Halign_(stub) for stub in stubs()]))
+    # mystackh(wp)
     mystackv(wp)
     # mystackw(wp)
     # mystackg(wp)
-    oj.Subsection_("subsection", "Grid display", mystackg)(wp)
-    oj.Subsubsection_("subsubsection", "Wrap display", mystackw)(wp)
+    # oj.Subsection_("subsection", "Grid display", mystackg)(wp)
+    # oj.Subsubsection_("subsubsection", "Wrap display", mystackw)(wp)
     return wp
 
 

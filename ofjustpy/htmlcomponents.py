@@ -2,7 +2,7 @@ from aenum import Enum
 from addict import Dict
 import justpy as jp
 from .ui_styles import basesty, sty
-from tailwind_tags import tstr
+from tailwind_tags import tstr, W, full, jc, twcc2hex
 from .tracker import trackStub
 
 
@@ -110,10 +110,14 @@ A_ = genStubFunc(jp.A, sty.A)
 Label_ = genStubFunc(jp.Label, sty.label)
 Circle_ = genStubFunc(jp.Button, sty.circle)
 Span_ = genStubFunc(jp.Span, sty.span)
+InputChangeOnly_ = genStubFunc(jp.InputChangeOnly, sty.input)
+Input_ = genStubFunc(jp.Input, sty.input)
+Textarea_ = genStubFunc(jp.Textarea, sty.textarea)
+Option_ = genStubFunc(jp.Option, sty.option)
 StackV_ = genStubFunc(HCC, sty.stackv)
 StackH_ = genStubFunc(HCC, sty.stackh)
 StackW_ = genStubFunc(HCC, sty.stackw)
-# sty will be set in StackG:init
+# sty will be set in StackG:init using num_rows, num_cols keyword arguments
 StackG_ = genStubFunc(StackG, [])
 
 
@@ -127,9 +131,37 @@ def SubheadingBanner_(key, heading_text, pcp=[], heading_text_sty=sty.subheading
 
 
 @trackStub
+def LabeledInput_(key, label, placeholder,  input_type="changeonly", pcp=[], **kwargs):
+    span_ = Span_("iname", text=label, pcp=sty.span)
+    if input_type == "changeonly":
+        input_ = InputChangeOnly_(
+            "input", placeholder=placeholder, type=type)
+    else:
+        input_ = Input_("input", placeholder=placeholder)
+    return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, span_=span_, input_=input_: input_(span_(dbref)))
+
+
+@trackStub
+def CheckboxInput_(key, placeholder, pcp=[], **kwargs):
+    # TODO: make form-checkbox firstclass
+    cbox_ = Input_("cbox", type="checkbox", pcp=['form-checkbox'])
+    input_ = Input_("inp", type="text", placeholder=placeholder)
+    return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)))
+
+
+@trackStub
 def Subsection_(key, heading_text, content_, pcp=[], **kwargs):
     return StackV_(key, cgens=[SubheadingBanner_(
         "heading", heading_text), Halign_(content_)])
+
+
+def KeyValue_(key, keyt, valuet, readonly=True, pcp=[], **kwargs):
+    key_ = Span_("keyt", text=keyt, pcp=sty.left_cell)
+    eq_ = Span_("eqt", text="=", pcp=sty.eq_cell)
+    value_ = Span_("valuet", type="text", text=valuet,
+                   readonly=readonly, pcp=sty.right_cell)
+    # TODO: overwrite xmargin. put padding only around stack
+    return StackH_(key, cgens=[key_, eq_, value_], pcp=[W/full, jc.center])
 
 
 def SubsubheadingBanner_(key, heading_text, pcp=[], **kwargs):
@@ -155,6 +187,20 @@ def Halign_(tstub, align="center", pcp=[], **kwargs):
 
 
 @trackStub
+def Slider_(key, itemiter, pcp=[], **kwargs):
+    circle_stubs = [Circle_(f"c{_}", text=str(_)) for _ in itemiter]
+    return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.slider], postrender=lambda dbref, circle_stubs=circle_stubs: [_(dbref) for _ in circle_stubs])
+
+
+@trackStub
+def MainColorSelector_(key):
+    color_list = twcc2hex.keys()
+    all_options = [Option_(f"opt_{option}", text=option, value=option, pcp=[bg/sty.get_color_tag(option)/5])
+                   for option in color_list]
+    options = [option_(for option_ in all_options]
+    return Stub
+
+@ trackStub
 def Form_(key, content_, submit_, on_form_submit, pcp=[]):
     def postrender(dbref, c=content_, s=submit_):
         c(dbref)
@@ -162,11 +208,34 @@ def Form_(key, content_, submit_, on_form_submit, pcp=[]):
     return Stub(key, jp.Form, twsty_tags=[*sty.Form, *pcp], postrender=postrender)
 
 
+@ trackStub
 def Button_(key, icon_f=None, pcp=[], **kwargs):
-    postrender = None
+    postrender=None
     if icon_f:
         def postrender(dbref, icon_f=icon_f): return icon_f(dbref)
     return Stub(key, jp.Button, twsty_tags=[*sty.button, *pcp], postrender=postrender,  **kwargs)
+
+# seriously wrong with select -- default val is not working
+
+
+@ trackStub
+def Select_(key, options, pcp=[], **kwargs):
+    """
+    to use default option, pass it to kwargs with text and value
+    """
+    return Stub(key, jp.Select, twsty_tags=[*sty.select, *pcp], postrender=lambda dbref: [_(dbref) for _ in options],  **kwargs)
+
+# TODO: how to deal with events at Div level
+
+
+@ trackStub
+def InputJBtn_(key, input_,  button_, pcp=[], **kwargs):
+    """
+    Put an input next to button
+    """
+
+    return Stub(key, jp.Div, twsty_tags=[*sty.centering_div, *sty.spacing, *pcp], postrender=lambda dbref, input_=input_, button_=button_: button_(input_(dbref), **kwargs))
+
 
 # class StackV(HCC):
 #     def __init__(self, key, **kwargs):

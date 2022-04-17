@@ -98,12 +98,12 @@ input = [bg/gray/1, opacity/80]
 
 cell = [fc/gray/6, fz.xl, pd/1, bg/gray/2]
 
-left_cell = [*cell, ta.right, W/"1/3"]
-right_cell = [*cell, ta.left, W/"1/3"]
-eq_cell = [*cell, ta.center, op.c]
+left_cell = [*cell, jc.end, W/"5/12"]
+right_cell = [*cell, jc.start, W/"5/12"]
+eq_cell = [*cell, jc.center, op.c]
 
 option = []
-label = []
+label = [db.f, jc.center]
 
 
 def stackG(num_cols, num_rows):
