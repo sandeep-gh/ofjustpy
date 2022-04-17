@@ -41,8 +41,10 @@ def launcher(request):
                   oj.Option_("myopt", text="choice", value="value"),
                   oj.Select_("myselect", [oj.Option_(
                       k, text=k, value=k) for k in ['red', 'blue', 'green']], text="def", value="def").event_handle(oj.click, on_btn_click),
-                  oj.Slider_("myslider", range(5), pcp=[bg/yellow/1])
-                  ]:
+                  # oj.Slider_("myslider", range(5), pcp=[bg/green/5]) #TODO: slider is messed up
+                  oj.MainColorSelector_(
+            "mycolorselector", pcp=[bg/rose/"200/20"])
+        ]:
             yield _
 
     mystackv = oj.Halign_(oj.StackV_(

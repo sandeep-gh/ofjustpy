@@ -2,7 +2,7 @@ from aenum import Enum
 from addict import Dict
 import justpy as jp
 from .ui_styles import basesty, sty
-from tailwind_tags import tstr, W, full, jc, twcc2hex
+from tailwind_tags import tstr, W, full, jc, twcc2hex, bg
 from .tracker import trackStub
 
 
@@ -51,11 +51,16 @@ class Stub:
         self.key = args[0]
         self.hcgen = args[1]
         self.target = None
-        self.eventhandlers = []
+        self.eventhandlers = {}
         self.args = args
         self.kwargs = kwargs
         self.postrender = kwargs.pop('postrender', None)
         self.cgens = kwargs.pop('cgens', None)
+        redirects = kwargs.pop('redirects', None)
+        self.redirects = None
+        if redirects:
+            self.redirects = Dict(redirects)
+
         pass
 
     def __call__(self, a):
@@ -71,9 +76,14 @@ class Stub:
         # TODO: will think about this
         # self.target.postrender()
 
-        # TODO: attach events
-        for event_type, handler in self.eventhandlers:
-            self.target.on(event_type, handler)
+        # attach event handlers
+        for event_type, handler in self.eventhandlers.items():
+            if self.redirects and event_type in self.redirects:
+                #self.target.on(event_type, handler)
+                # call local handler
+                self.target.on(event_type, self.redirects[event_type])
+            else:
+                self.target.on(event_type, handler)
 
         if self.cgens:
             self.target.addItems(self.cgens)
@@ -81,7 +91,7 @@ class Stub:
         return a
 
     def event_handle(self, event_type, handler):
-        self.eventhandlers.append((event_type.value, handler))
+        self.eventhandlers[event_type.value] = handler
         return self
 
 
@@ -184,23 +194,58 @@ def Halign_(tstub, align="center", pcp=[], **kwargs):
     """
     return Stub(f"Halign{tstub.key}",  jp.Div, twsty_tags=[
         *pcp, *sty.halign(align)],     postrender=lambda dbref, tstub=tstub: tstub(dbref), **kwargs)
+# TODO: implement default value
 
 
 @trackStub
 def Slider_(key, itemiter, pcp=[], **kwargs):
-    circle_stubs = [Circle_(f"c{_}", text=str(_)) for _ in itemiter]
-    return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.slider], postrender=lambda dbref, circle_stubs=circle_stubs: [_(dbref) for _ in circle_stubs])
+    def on_circle_click(dbref, msg):
+        # print("circle clicked with value ", dbref.text,
+        #       " ", msg.value, " ", dbref.slider)
+        # pass the value of selected circle to slider
+        dbref.slider.value = msg.value
+
+        pass
+    circle_stubs = [Circle_(f"c{_}", text=str(_), value=_).event_handle(
+        EventType.click, on_circle_click) for _ in itemiter]
+
+    def postrender(dbref, circle_stubs=circle_stubs):
+        for cs in circle_stubs:
+            cs(dbref)
+            cs.target.slider = dbref
+
+    # return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.slider], postrender=lambda dbref, circle_stubs=circle_stubs: [_(dbref) for _ in circle_stubs])
+    # The click on Slider should come to this function; its value updated then passed to user
+
+    def on_click_hook(dbref, msg):
+        msg.value = dbref.value
+        if 'click' in dbref.stub.eventhandlers:
+            dbref.stub.eventhandlers['click'](dbref, msg)
+        pass
+
+    return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.slider], postrender=postrender, redirects=[('click', on_click_hook)])
 
 
-@trackStub
-def MainColorSelector_(key):
+# No trackSub...select will already do that
+def MainColorSelector_(key, **kwargs):
     color_list = twcc2hex.keys()
     all_options = [Option_(f"opt_{option}", text=option, value=option, pcp=[bg/sty.get_color_tag(option)/5])
                    for option in color_list]
-    options = [option_(for option_ in all_options]
-    return Stub
+    return Select_(key, all_options, **kwargs)
 
-@ trackStub
+
+def ColorSelector_(key):
+    mainColorSelector_ = MainColorSelector_(
+        "MainColorSelector")
+    shades_ = Slider_("Shades", range(1, 10))
+    # TODO: fix spacing
+    # TODO: event handling
+    StackH_(key, cgens=[mainColorSelector_, shades_])
+
+# TODO: toggleBtn, expansionContainer
+
+
+@trackStub
 def Form_(key, content_, submit_, on_form_submit, pcp=[]):
     def postrender(dbref, c=content_, s=submit_):
         c(dbref)
@@ -210,7 +255,7 @@ def Form_(key, content_, submit_, on_form_submit, pcp=[]):
 
 @ trackStub
 def Button_(key, icon_f=None, pcp=[], **kwargs):
-    postrender=None
+    postrender = None
     if icon_f:
         def postrender(dbref, icon_f=icon_f): return icon_f(dbref)
     return Stub(key, jp.Button, twsty_tags=[*sty.button, *pcp], postrender=postrender,  **kwargs)
@@ -218,7 +263,7 @@ def Button_(key, icon_f=None, pcp=[], **kwargs):
 # seriously wrong with select -- default val is not working
 
 
-@ trackStub
+@trackStub
 def Select_(key, options, pcp=[], **kwargs):
     """
     to use default option, pass it to kwargs with text and value

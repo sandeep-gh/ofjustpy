@@ -82,8 +82,8 @@ infocard = [mr/4]
 
 barpanel = [mr/1]
 
-slider = [H/1, bg/gray/9, bg/opacity/5,
-          db.fi, ji.center, mr/1, ]
+slider = [H/6, bg/gray/9, bg/opacity/5,
+          db.f, ai.center, mr/1, ]
 circle = [W/6, H/6, bg/gray /
           7, fc/pink/2, bdr.full, mr/2, *hover(noop/bds.double, noop/bt.bd, bg/gray/1, bd/gray/2)]  # bg/gray/5
 
