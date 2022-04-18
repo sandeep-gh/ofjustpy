@@ -6,9 +6,10 @@ from tailwind_tags import *
 
 def launcher(request):
     wp = jp.WebPage()
+    wp.head_html = """<script src="https://cdn.tailwindcss.com/"></script>"""
 
     def on_btn_click(dbref, msg):
-        print("slider clicked ", msg)
+        print("btn clicked ", msg)
 
         pass
 
@@ -22,10 +23,12 @@ def launcher(request):
     def stubs():
         for _ in [
                 # TODO: slider is messed up
-                oj.Slider_("myslider", range(5), pcp=[
-                           bg/green/5]).event_handle(oj.click, on_btn_click)
+                # oj.Slider_("myslider", range(5), pcp=[
+                #            bg/green/5]).event_handle(oj.click, on_btn_click)
                 # separator_,
                 # oj.Slider_("myslider", range(5), pcp=[bg/green/5]),
+                oj.ColorSelector_("colorselector").event_handle(
+                    oj.click, on_btn_click)
 
         ]:
             yield _

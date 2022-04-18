@@ -2,7 +2,7 @@ from aenum import Enum
 from addict import Dict
 import justpy as jp
 from .ui_styles import basesty, sty
-from tailwind_tags import tstr, W, full, jc, twcc2hex, bg
+from tailwind_tags import tstr, W, full, jc, twcc2hex, bg, onetonine
 from .tracker import trackStub
 
 
@@ -213,6 +213,7 @@ def Slider_(key, itemiter, pcp=[], **kwargs):
         for cs in circle_stubs:
             cs(dbref)
             cs.target.slider = dbref
+        dbref.circle_stubs = circle_stubs
 
     # return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.slider], postrender=lambda dbref, circle_stubs=circle_stubs: [_(dbref) for _ in circle_stubs])
     # The click on Slider should come to this function; its value updated then passed to user
@@ -222,8 +223,10 @@ def Slider_(key, itemiter, pcp=[], **kwargs):
         if 'click' in dbref.stub.eventhandlers:
             dbref.stub.eventhandlers['click'](dbref, msg)
         pass
-
-    return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.slider], postrender=postrender, redirects=[('click', on_click_hook)])
+    stub = Stub(key, jp.Div, twsty_tags=[
+                *pcp, *sty.slider], postrender=postrender, redirects=[('click', on_click_hook)])
+    stub.circle_stubs = circle_stubs
+    return stub
 
 
 # No trackSub...select will already do that
@@ -234,13 +237,63 @@ def MainColorSelector_(key, **kwargs):
     return Select_(key, all_options, **kwargs)
 
 
-def ColorSelector_(key):
-    mainColorSelector_ = MainColorSelector_(
-        "MainColorSelector")
-    shades_ = Slider_("Shades", range(1, 10))
+@trackStub
+def ColorSelector_(key, pcp=[], **kwargs):
+    def on_main_color_select(dbref, msg):
+        print("main color selected ", msg.value)
+        # pass the selection to parent component
+        dbref.colorSelector.maincolor_value = msg.value
+        colortag = sty.get_color_tag(dbref.colorSelector.maincolor_value)
+        dbref.colorSelector.component_clicked = 'mainColorSelector'
+        pass
+    mainColorSelector_ = MainColorSelector_("MainColorSelector").event_handle(
+        EventType.click, on_main_color_select)
+
+    def on_slider_select(dbref, msg):
+        print("slider selected with value = ", msg.value)
+        # whatever value is computed pass to colorselector
+        # pass the selection to parent component
+        dbref.colorSelector.slider_value = int(msg.value)
+        dbref.colorSelector.component_clicked = 'slider'
+        pass
+    shades_ = Slider_("Shades", range(1, 10)).event_handle(
+        EventType.click, on_slider_select)
+
+    def update_slider(colortag, shades_=shades_):
+        for cs in shades_.circle_stubs:
+            cref = cs.target
+            shid = int(cref.value)
+            cref.twcc = f"{colortag}-{shid}00"
+            # TODO: also update twsty_tags
+            cref.set_class(f"bg-{colortag}-{shid}00")
+
+    def postrender(dbref):
+        dbref.addItems([mainColorSelector_, shades_])
+        shades_.target.colorSelector = dbref
+        mainColorSelector_.target.colorSelector = dbref
+        dbref.maincolor_value = "blue"
+        dbref.slider_value = 5  # the default value
+        dbref.component_clicked = None
+        print("what eventhandlers exists", dbref.stub.eventhandlers)
+
+    def on_click_hook(dbref, msg):
+        main_color = dbref.maincolor_value
+        shade = dbref.slider_value
+
+        msg.value = twcc2hex[main_color][onetonine[shade]]
+        match dbref.component_clicked:
+            case 'mainColorSelector':
+                update_slider(dbref.maincolor_value)
+            case None:
+                pass
+            case 'slider':
+                if 'click' in dbref.stub.eventhandlers:
+                    dbref.stub.eventhandlers['click'](dbref, msg)
     # TODO: fix spacing
     # TODO: event handling
-    StackH_(key, cgens=[mainColorSelector_, shades_])
+    # return StackH_(key, cgens=[mainColorSelector_, shades_])
+    return Stub(key, HCC, twsty_tags=[*pcp, *sty.stackh], postrender=postrender, redirects=[('click', on_click_hook)], **kwargs)
+
 
 # TODO: toggleBtn, expansionContainer
 
