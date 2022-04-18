@@ -3,7 +3,7 @@ import os
 if os:
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
-import functools
+
 import json
 import logging
 import os
@@ -11,19 +11,23 @@ import traceback
 import typing
 from itertools import tee
 from typing import get_type_hints
-
+import functools
 import jsbeautifier
-
+from typing import Any, NamedTuple
 from addict import Dict
+
+# This is a global variable
+curr_session_ctx = None
+
 #from webapp_framework_tracking.dbrefBoard import register as dbrefBoard_register
 
 
-_hcs = Dict()
-refBoard = Dict(track_changes=True)
-_currTracker = _hcs
-_currSpath = "/"
-session_dict = Dict(track_changes=True)
-session_dict.model = Dict(track_changes=True)
+#_hcs = Dict()
+#refBoard = Dict(track_changes=True)
+#_currTracker = _hcs
+#_currSpath = "/"
+#session_dict = Dict(track_changes=True)
+#session_dict.model = Dict(track_changes=True)
 
 
 # def build_hcdbref():
@@ -48,45 +52,129 @@ session_dict.model = Dict(track_changes=True)
 
 #     return hcgen.target
 
-def save_sty(model: Dict, arg: Dict):
-    logger.debug("In save sty")
-    styreport = session_dict['styj']
-    opts = jsbeautifier.default_options()
-    res = jsbeautifier.beautify(json.dumps(session_dict['styj']), opts)
-    with open("styreport.json", "w") as fh:
-        fh.write(res)
-    pass
+# def save_sty(model: Dict, arg: Dict):
+#     logger.debug("In save sty")
+#     styreport = session_dict['styj']
+#     opts = jsbeautifier.default_options()
+#     res = jsbeautifier.beautify(json.dumps(session_dict['styj']), opts)
+#     with open("styreport.json", "w") as fh:
+#         fh.write(res)
+#     pass
 
 
-def load_sty(model: Dict, arg: Dict):
-    logger.debug("loading sty")
-    with open("styreport.json", "r") as fh:
-        session_dict['styj'] = Dict(json.loads(fh.read()))
+# def load_sty(model: Dict, arg: Dict):
+#     logger.debug("loading sty")
+#     with open("styreport.json", "r") as fh:
+#         session_dict['styj'] = Dict(json.loads(fh.read()))
 
 
-class uictx:
-    def __init__(self, ctx, **kwargs):
+# class uictx:
+#     def __init__(self, ctx, **kwargs):
 
-        self.ctx = ctx
+#         self.ctx = ctx
+#         pass
+
+#     def __enter__(self):
+#         global _currTracker
+#         global _currSpath
+#         if self.ctx not in _currTracker:
+#             _currTracker[self.ctx] = Dict()
+#         self.pctx = _currTracker
+#         self.pspath = _currSpath
+#         _currTracker = _currTracker[self.ctx]
+#         _currSpath = _currSpath + f"{self.ctx}/"
+#         return _currTracker
+
+#     def __exit__(self, type, value, traceback):
+#         global _currTracker
+#         global _currSpath
+#         _currTracker = self.pctx
+#         _currSpath = self.pspath
+#         pass
+
+
+def get_session_manager(session_id):
+    session_ctx = Dict()
+    session_ctx.stubStore = Dict(track_changes=True)
+    session_ctx.refBoard = Dict(track_changes=True)
+    session_ctx.model = Dict(track_changes=True)
+
+    class uictx:
+        _currTracker = session_ctx.stubStore
+        _currSpath = "/"
+
+        def __init__(self, ctx, **kwargs):
+            self.ctx = ctx
+            pass
+
+        def __enter__(self):
+            #global _currTracker
+            #global _currSpath
+            if self.ctx not in uictx._currTracker:
+                uictx._currTracker[self.ctx] = Dict()
+            self.pctx = uictx._currTracker
+            self.pspath = uictx._currSpath
+            uictx._currTracker = uictx. _currTracker[self.ctx]
+            uictx._currSpath = uictx._currSpath + f"{self.ctx}/"
+            return uictx._currTracker
+
+        def __exit__(self, type, value, traceback):
+            #global _currTracker
+            #global _currSpath
+            uictx._currTracker = self.pctx
+            uictx._currSpath = self.pspath
+            pass
+
+    session_ctx.uictx = uictx
+
+    def track_stubGen_wrapper(func, *args, **kwargs):
+        """
+        a wrapper over stub generator function to track 
+        it
+        """
+        # TODO: put check for arguments to the stub
+
+        stub = func(*args, **kwargs)
+        uictx._currTracker[stub.key] = stub
+        stub.spath = uictx._currSpath + stub.key
+        #logger.debug(f"adding {hcgen.key} to tracking at {hcgen.spath}")
+        return stub
+
+    session_ctx.track_stubGen_wrapper = track_stubGen_wrapper
+    return session_ctx
+
+
+class sessionctx:
+    def __init__(self, session_ctx, **kwargs):
+        global curr_session_ctx
+        if curr_session_ctx is not None:
+            raise ValueError(
+                "Fatal error: building new session ctx within an existing one ")
+
+        curr_session_ctx = session_ctx
+        print("current session context is set")
         pass
 
     def __enter__(self):
-        global _currTracker
-        global _currSpath
-        if self.ctx not in _currTracker:
-            _currTracker[self.ctx] = Dict()
-        self.pctx = _currTracker
-        self.pspath = _currSpath
-        _currTracker = _currTracker[self.ctx]
-        _currSpath = _currSpath + f"{self.ctx}/"
-        return _currTracker
+        print("entering the context")
+        return
 
     def __exit__(self, type, value, traceback):
-        global _currTracker
-        global _currSpath
-        _currTracker = self.pctx
-        _currSpath = self.pspath
+        print("exit a session context")
+        curr_session_ctx = None
         pass
+
+
+def trackStub(func):
+    """
+    register the stub in _hcs/stubStore
+    """
+    @functools.wraps(func)
+    def stubGen_wrapper(*args, **kwargs):
+        print("invoke current session context stubGenWrapper")
+        return curr_session_ctx.track_stubGen_wrapper(func, *args, **kwargs)
+
+    return stubGen_wrapper
 
 
 # def hcGen_register(func):
@@ -108,23 +196,6 @@ class uictx:
 #         return hcref
 
 #     return hcGen_wrapper
-
-
-def trackStub(func):
-    """
-    register the stub in _hcs/stubStore
-    """
-    @functools.wraps(func)
-    def stubGen_wrapper(*args, **kwargs):
-        # TODO: put check for arguments to the stub
-
-        stub = func(*args, **kwargs)
-        _currTracker[stub.key] = stub
-        stub.spath = _currSpath + stub.key
-        #logger.debug(f"adding {hcgen.key} to tracking at {hcgen.spath}")
-        return stub
-
-    return stubGen_wrapper
 
 
 # def register(func):
