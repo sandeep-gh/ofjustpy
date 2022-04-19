@@ -1,4 +1,5 @@
 from aenum import Enum
+from typing import List, AnyStr, Callable, Any
 from addict import Dict
 import justpy as jp
 from .ui_styles import basesty, sty
@@ -55,6 +56,9 @@ class Stub:
         self.args = args
         self.kwargs = kwargs
         self.postrender = kwargs.pop('postrender', None)
+        if self.key == "wp":
+            print("in init stub")
+            print(kwargs)
         self.cgens = kwargs.pop('cgens', None)
         redirects = kwargs.pop('redirects', None)
         self.redirects = None
@@ -79,7 +83,7 @@ class Stub:
         # attach event handlers
         for event_type, handler in self.eventhandlers.items():
             if self.redirects and event_type in self.redirects:
-                #self.target.on(event_type, handler)
+                # self.target.on(event_type, handler)
                 # call local handler
                 self.target.on(event_type, self.redirects[event_type])
             else:
@@ -95,15 +99,31 @@ class Stub:
         return self
 
 
-# def A_(key, **kwargs):
-#     pcp = kwargs.pop('pcp')
-#     twsty_tags = [*sty.A,  *pcp]
-#     return Stub(key, jp.A, twsty_tags=twsty_tags, **kwargs)
+class WPStub(Stub):
+    def __init__(self, *args,  **kwargs):
+        super().__init__(*args, **kwargs)
 
-# def P_(key, **kwargs):
-#     pcp = kwargs.pop('pcp')
-#     twsty_tags = [*sty.P,  *pcp]
-#     return Stub(args[0], jp.P, kwargs)
+    def __call__(self):
+        """for webpage instantiation"""
+        # print(f"calling as function {self.id}")
+        # TODO: what about other parameters
+        self.target = self.hcgen(**self.kwargs)
+
+        self.target.stub = self
+        if self.postrender:
+            # print("call postrender ", self.key)
+            self.postrender(self.target)
+
+        # TODO: will think about this
+        # self.target.postrender()
+
+        # attach event handlers
+        if self.cgens:
+            # wp is not an HCC
+            for cgen in self.cgens:
+                cgen(self.target)
+        # return anchor so that other components can hang on to it
+        return self.target
 
 
 def genStubFunc(jpf, stytags):
@@ -124,6 +144,7 @@ InputChangeOnly_ = genStubFunc(jp.InputChangeOnly, sty.input)
 Input_ = genStubFunc(jp.Input, sty.input)
 Textarea_ = genStubFunc(jp.Textarea, sty.textarea)
 Option_ = genStubFunc(jp.Option, sty.option)
+Container_ = genStubFunc(HCC, sty.container)
 StackV_ = genStubFunc(HCC, sty.stackv)
 StackH_ = genStubFunc(HCC, sty.stackh)
 StackW_ = genStubFunc(HCC, sty.stackw)
@@ -274,7 +295,6 @@ def ColorSelector_(key, pcp=[], **kwargs):
         dbref.maincolor_value = "blue"
         dbref.slider_value = 5  # the default value
         dbref.component_clicked = None
-        print("what eventhandlers exists", dbref.stub.eventhandlers)
 
     def on_click_hook(dbref, msg):
         main_color = dbref.maincolor_value
@@ -354,3 +374,22 @@ def InputJBtn_(key, input_,  button_, pcp=[], **kwargs):
 #                          text=text, value=text, twsty_tags=twsty_tags, **kwargs)
 
 # short tag for htmlcomponents
+
+def WebPage_(key: AnyStr, page_type: AnyStr = 'tailwind', head_html_stmts: List[AnyStr] = [], cgens: List = [], **kwargs):
+    def postrender(wp, cgens=cgens):
+        wp.tailwind = False  # we inject our tailwind
+        wp.head_html = "\n".join([*head_html_stmts,
+                                  """<link rel = "stylesheet" href = "https://cdn.jsdelivr.net/npm/inter-ui@3.13.1/inter.min.css" > """,
+                                  """ <script src = "https://cdn.tailwindcss.com/" > </script >"""
+                                  ])
+        # wp.head_html = "\n".join(head_html)
+        wp.css = 'body { font-family: Inter; }'
+        wp.body_classes = tstr(*wp.twsty_tags)
+
+    if page_type == 'tailwind':
+        stub = WPStub(key, jp.WebPage, twsty_tags=[
+            *sty.wp], postrender=postrender, cgens=cgens, **kwargs)
+    elif page_type == 'Quasar':
+        stub = WPStub(key, jp.QuasarPage, twsty_tags=[
+            *sty.wp], postrender=postrender, cgens=cgens,  **kwargs)
+    return stub

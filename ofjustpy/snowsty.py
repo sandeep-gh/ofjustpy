@@ -105,6 +105,8 @@ eq_cell = [*cell, jc.center, op.c]
 option = []
 label = [db.f, jc.center]
 
+wp = [bg/slate/"100/10"]
+
 
 def stackG(num_cols, num_rows):
     return [db.g,  gap/1, G/cols/f'{num_cols}', G/rows/f'{num_rows}', gf.row]

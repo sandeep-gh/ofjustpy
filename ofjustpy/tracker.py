@@ -149,7 +149,7 @@ class sessionctx:
         global curr_session_ctx
         if curr_session_ctx is not None:
             raise ValueError(
-                "Fatal error: building new session ctx within an existing one ")
+                f"Fatal error: building new session ctx within an existing one {curr_session_ctx} {session_ctx}")
 
         curr_session_ctx = session_ctx
         print("current session context is set")
@@ -160,6 +160,7 @@ class sessionctx:
         return
 
     def __exit__(self, type, value, traceback):
+        global curr_session_ctx
         print("exit a session context")
         curr_session_ctx = None
         pass
@@ -171,7 +172,6 @@ def trackStub(func):
     """
     @functools.wraps(func)
     def stubGen_wrapper(*args, **kwargs):
-        print("invoke current session context stubGenWrapper")
         return curr_session_ctx.track_stubGen_wrapper(func, *args, **kwargs)
 
     return stubGen_wrapper

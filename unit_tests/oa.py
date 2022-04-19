@@ -42,8 +42,8 @@ def launcher(request):
                   oj.Select_("myselect", [oj.Option_(
                       k, text=k, value=k) for k in ['red', 'blue', 'green']], text="def", value="def").event_handle(oj.click, on_btn_click),
                   # oj.Slider_("myslider", range(5), pcp=[bg/green/5]) #TODO: slider is messed up
-                  oj.MainColorSelector_(
-            "mycolorselector", pcp=[bg/rose/"200/20"])
+                  oj.ColorSelector_(
+            "colorselector", pcp=[bg/rose/"200/20"])
         ]:
             yield _
 
