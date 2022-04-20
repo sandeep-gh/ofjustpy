@@ -126,6 +126,7 @@ def get_session_manager(session_id):
             pass
 
     session_ctx.uictx = uictx
+    #input_, button_
 
     def track_stubGen_wrapper(func, *args, **kwargs):
         """
@@ -133,7 +134,34 @@ def get_session_manager(session_id):
         it
         """
         # TODO: put check for arguments to the stub
+        if 'DEBUG_WEBAPP' in os.environ:
+            type_hints = get_type_hints(func)
+            # this function takes a stub as argument
+            if "content_" in type_hints or "input_" in type_hints or "button_" in type_hints:
+                for argname, argval in zip(type_hints.keys(), args):
+                    if argname in ['content_', ' input_',  'button_']:
+                        if isinstance(argval, Dict):
+                            print(
+                                "aha -- got dict instead of stub; you mistyped fatso")
+                            print(traceback.format_exc())
+                            raise ValueError("Got empty dict instead of stub")
 
+            if 'cgens' in kwargs:
+                cgens = kwargs.pop('cgens')
+                if isinstance(cgens, typing.List):
+                    cgens_c = cgens
+
+                else:
+                    cgens, cgens_c = tee(cgens)
+
+                for idx, cgen in enumerate(cgens_c):
+                    if isinstance(cgen, Dict):
+                        print(
+                            f"aha -- got dict instead of stub; you mistyped fatso finger at array position {idx}")
+                        print(traceback.format_exc())
+                        raise ValueError("Got empty dict instead of stub")
+
+                kwargs['cgens'] = cgens
         stub = func(*args, **kwargs)
         uictx._currTracker[stub.key] = stub
         stub.spath = uictx._currSpath + stub.key

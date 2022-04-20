@@ -6,6 +6,8 @@ from .ui_styles import basesty, sty
 from tailwind_tags import tstr, W, full, jc, twcc2hex, bg, onetonine
 from .tracker import trackStub
 
+StubFunc_T = Callable[Any, Any]
+
 
 class EventType(Enum):
     click = "click"
@@ -128,7 +130,7 @@ class WPStub(Stub):
 
 def genStubFunc(jpf, stytags):
     @trackStub
-    def func(key, **kwargs):
+    def func(key: AnyStr, **kwargs):
         pcp = kwargs.pop('pcp', [])
         twsty_tags = [*stytags,  *pcp]
         return Stub(key, jpf, twsty_tags=twsty_tags, **kwargs)
@@ -153,7 +155,7 @@ StackG_ = genStubFunc(StackG, [])
 
 
 @trackStub
-def SubheadingBanner_(key, heading_text, pcp=[], heading_text_sty=sty.subheading_text,  **kwargs):
+def SubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp: List = [], heading_text_sty=sty.subheading_text,  **kwargs):
     # = genStubFunc(jp.Div, sty.subheading_box)
     spanl_ = Span_("headingL", text=heading_text, pcp=heading_text_sty)
     spanr_ = Span_("headingR", text=heading_text, pcp=[
@@ -162,7 +164,7 @@ def SubheadingBanner_(key, heading_text, pcp=[], heading_text_sty=sty.subheading
 
 
 @trackStub
-def LabeledInput_(key, label, placeholder,  input_type="changeonly", pcp=[], **kwargs):
+def LabeledInput_(key: AnyStr, label: AnyStr, placeholder: AnyStr,  input_type="changeonly", pcp=[], **kwargs):
     span_ = Span_("iname", text=label, pcp=sty.span)
     if input_type == "changeonly":
         input_ = InputChangeOnly_(
@@ -173,7 +175,7 @@ def LabeledInput_(key, label, placeholder,  input_type="changeonly", pcp=[], **k
 
 
 @trackStub
-def CheckboxInput_(key, placeholder, pcp=[], **kwargs):
+def CheckboxInput_(key: AnyStr, placeholder: AnyStr, pcp=[], **kwargs):
     # TODO: make form-checkbox firstclass
     cbox_ = Input_("cbox", type="checkbox", pcp=['form-checkbox'])
     input_ = Input_("inp", type="text", placeholder=placeholder)
@@ -181,12 +183,12 @@ def CheckboxInput_(key, placeholder, pcp=[], **kwargs):
 
 
 @trackStub
-def Subsection_(key, heading_text, content_, pcp=[], **kwargs):
+def Subsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp=[], **kwargs):
     return StackV_(key, cgens=[SubheadingBanner_(
         "heading", heading_text), Halign_(content_)])
 
 
-def KeyValue_(key, keyt, valuet, readonly=True, pcp=[], **kwargs):
+def KeyValue_(key: AnyStr, keyt: AnyStr, valuet: AnyStr, readonly=True, pcp=[], **kwargs):
     key_ = Span_("keyt", text=keyt, pcp=sty.left_cell)
     eq_ = Span_("eqt", text="=", pcp=sty.eq_cell)
     value_ = Span_("valuet", type="text", text=valuet,
@@ -195,31 +197,31 @@ def KeyValue_(key, keyt, valuet, readonly=True, pcp=[], **kwargs):
     return StackH_(key, cgens=[key_, eq_, value_], pcp=[W/full, jc.center])
 
 
-def SubsubheadingBanner_(key, heading_text, pcp=[], **kwargs):
+def SubsubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp=[], **kwargs):
     return SubheadingBanner_(key, heading_text, pcp=[], heading_text_sty=sty.subsubheading_text, **kwargs)
 
 
-def Subsubsection_(key, heading_text, content_, pcp=[], **kwargs):
+def Subsubsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp: List = [], **kwargs):
     return StackV_(key, cgens=[SubsubheadingBanner_(
         "heading", heading_text), Halign_(content_)], **kwargs)
 
 
-def WithBanner_(key, banner_text, component_, pcp=[], **kwargs):
+def WithBanner_(key: AnyStr, banner_text: AnyStr, component_: Callable, pcp: List = [], **kwargs):
     return StackH_(key, cgens=[Span_("banner", text=banner_text), component_], pcp=pcp, **kwargs)
 
 
 @trackStub
-def Halign_(tstub, align="center", pcp=[], **kwargs):
+def Halign_(content_: Callable, align="center", pcp=[], **kwargs):
     """
     tstub: target stub, i.e., the one needs to be aligned
     """
-    return Stub(f"Halign{tstub.key}",  jp.Div, twsty_tags=[
-        *pcp, *sty.halign(align)],     postrender=lambda dbref, tstub=tstub: tstub(dbref), **kwargs)
+    return Stub(f"Halign{content_.key}",  jp.Div, twsty_tags=[
+        *pcp, *sty.halign(align)],     postrender=lambda dbref, tstub=content_: tstub(dbref), **kwargs)
 # TODO: implement default value
 
 
 @trackStub
-def Slider_(key, itemiter, pcp=[], **kwargs):
+def Slider_(key: AnyStr, itemiter: List, pcp: List = [], **kwargs):
     def on_circle_click(dbref, msg):
         # print("circle clicked with value ", dbref.text,
         #       " ", msg.value, " ", dbref.slider)
@@ -250,8 +252,7 @@ def Slider_(key, itemiter, pcp=[], **kwargs):
     return stub
 
 
-# No trackSub...select will already do that
-def MainColorSelector_(key, **kwargs):
+def MainColorSelector_(key: AnyStr, **kwargs):
     color_list = twcc2hex.keys()
     all_options = [Option_(f"opt_{option}", text=option, value=option, pcp=[bg/sty.get_color_tag(option)/5])
                    for option in color_list]
@@ -259,7 +260,7 @@ def MainColorSelector_(key, **kwargs):
 
 
 @trackStub
-def ColorSelector_(key, pcp=[], **kwargs):
+def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
     def on_main_color_select(dbref, msg):
         print("main color selected ", msg.value)
         # pass the selection to parent component
@@ -317,17 +318,17 @@ def ColorSelector_(key, pcp=[], **kwargs):
 
 # TODO: toggleBtn, expansionContainer
 
-
+# TODO: check event_handle for form
 @trackStub
-def Form_(key, content_, submit_, on_form_submit, pcp=[]):
+def Form_(key: AnyStr, content_: Callable, submit_: Callable, pcp: List = []):
     def postrender(dbref, c=content_, s=submit_):
         c(dbref)
         s(dbref)
     return Stub(key, jp.Form, twsty_tags=[*sty.Form, *pcp], postrender=postrender)
 
 
-@ trackStub
-def Button_(key, icon_f=None, pcp=[], **kwargs):
+@trackStub
+def Button_(key: AnyStr, icon_f: Callable = None, pcp: List = [], **kwargs):
     postrender = None
     if icon_f:
         def postrender(dbref, icon_f=icon_f): return icon_f(dbref)
@@ -337,7 +338,7 @@ def Button_(key, icon_f=None, pcp=[], **kwargs):
 
 
 @trackStub
-def Select_(key, options, pcp=[], **kwargs):
+def Select_(key: AnyStr, options: List, pcp: List = [], **kwargs):
     """
     to use default option, pass it to kwargs with text and value
     """
@@ -346,8 +347,8 @@ def Select_(key, options, pcp=[], **kwargs):
 # TODO: how to deal with events at Div level
 
 
-@ trackStub
-def InputJBtn_(key, input_,  button_, pcp=[], **kwargs):
+@trackStub
+def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwargs):
     """
     Put an input next to button
     """
@@ -374,9 +375,10 @@ def InputJBtn_(key, input_,  button_, pcp=[], **kwargs):
 #                          text=text, value=text, twsty_tags=twsty_tags, **kwargs)
 
 # short tag for htmlcomponents
-
+@trackStub
 def WebPage_(key: AnyStr, page_type: AnyStr = 'tailwind', head_html_stmts: List[AnyStr] = [], cgens: List = [], **kwargs):
     def postrender(wp, cgens=cgens):
+        # TODO: declare session manager here
         wp.tailwind = False  # we inject our tailwind
         wp.head_html = "\n".join([*head_html_stmts,
                                   """<link rel = "stylesheet" href = "https://cdn.jsdelivr.net/npm/inter-ui@3.13.1/inter.min.css" > """,
