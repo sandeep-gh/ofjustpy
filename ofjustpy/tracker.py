@@ -97,7 +97,7 @@ def get_session_manager(session_id):
     session_ctx = Dict()
     session_ctx.stubStore = Dict(track_changes=True)
     session_ctx.refBoard = Dict(track_changes=True)
-    session_ctx.model = Dict(track_changes=True)
+    session_ctx.appstate = Dict(track_changes=True)
 
     class uictx:
         _currTracker = session_ctx.stubStore

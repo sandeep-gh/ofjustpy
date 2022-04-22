@@ -129,6 +129,7 @@ class WPStub(Stub):
 
 
 def genStubFunc(jpf, stytags):
+
     @trackStub
     def func(key: AnyStr, **kwargs):
         pcp = kwargs.pop('pcp', [])
@@ -144,6 +145,10 @@ Circle_ = genStubFunc(jp.Button, sty.circle)
 Span_ = genStubFunc(jp.Span, sty.span)
 InputChangeOnly_ = genStubFunc(jp.InputChangeOnly, sty.input)
 Input_ = genStubFunc(jp.Input, sty.input)
+
+# use glossy=True,
+# size="sm", label=label, value =False for toggle btn
+ToggleBtn_ = genStubFunc(jp.QToggle, sty.togglebtn)
 Textarea_ = genStubFunc(jp.Textarea, sty.textarea)
 Option_ = genStubFunc(jp.Option, sty.option)
 Container_ = genStubFunc(HCC, sty.container)
@@ -179,13 +184,13 @@ def CheckboxInput_(key: AnyStr, placeholder: AnyStr, pcp=[], **kwargs):
     # TODO: make form-checkbox firstclass
     cbox_ = Input_("cbox", type="checkbox", pcp=['form-checkbox'])
     input_ = Input_("inp", type="text", placeholder=placeholder)
-    return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)))
+    return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)), **kwargs)
 
 
 @trackStub
 def Subsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp=[], **kwargs):
     return StackV_(key, cgens=[SubheadingBanner_(
-        "heading", heading_text), Halign_(content_)])
+        "heading", heading_text), Halign_(content_)], **kwargs)
 
 
 def KeyValue_(key: AnyStr, keyt: AnyStr, valuet: AnyStr, readonly=True, pcp=[], **kwargs):
@@ -194,7 +199,7 @@ def KeyValue_(key: AnyStr, keyt: AnyStr, valuet: AnyStr, readonly=True, pcp=[], 
     value_ = Span_("valuet", type="text", text=valuet,
                    readonly=readonly, pcp=sty.right_cell)
     # TODO: overwrite xmargin. put padding only around stack
-    return StackH_(key, cgens=[key_, eq_, value_], pcp=[W/full, jc.center])
+    return StackH_(key, cgens=[key_, eq_, value_], pcp=[W/full, jc.center], **kwargs)
 
 
 def SubsubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp=[], **kwargs):
@@ -247,7 +252,7 @@ def Slider_(key: AnyStr, itemiter: List, pcp: List = [], **kwargs):
             dbref.stub.eventhandlers['click'](dbref, msg)
         pass
     stub = Stub(key, jp.Div, twsty_tags=[
-                *pcp, *sty.slider], postrender=postrender, redirects=[('click', on_click_hook)])
+                *pcp, *sty.slider], postrender=postrender, redirects=[('click', on_click_hook)], **kwargs)
     stub.circle_stubs = circle_stubs
     return stub
 
@@ -320,11 +325,11 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
 
 # TODO: check event_handle for form
 @trackStub
-def Form_(key: AnyStr, content_: Callable, submit_: Callable, pcp: List = []):
+def Form_(key: AnyStr, content_: Callable, submit_: Callable, pcp: List = [], **kwargs):
     def postrender(dbref, c=content_, s=submit_):
         c(dbref)
         s(dbref)
-    return Stub(key, jp.Form, twsty_tags=[*sty.Form, *pcp], postrender=postrender)
+    return Stub(key, jp.Form, twsty_tags=[*sty.Form, *pcp], postrender=postrender, **kwargs)
 
 
 @trackStub
@@ -391,7 +396,7 @@ def WebPage_(key: AnyStr, page_type: AnyStr = 'tailwind', head_html_stmts: List[
     if page_type == 'tailwind':
         stub = WPStub(key, jp.WebPage, twsty_tags=[
             *sty.wp], postrender=postrender, cgens=cgens, **kwargs)
-    elif page_type == 'Quasar':
+    elif page_type == 'quasar':
         stub = WPStub(key, jp.QuasarPage, twsty_tags=[
             *sty.wp], postrender=postrender, cgens=cgens,  **kwargs)
     return stub

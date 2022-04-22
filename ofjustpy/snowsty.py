@@ -129,6 +129,8 @@ tbl = [fz.sm, 'table-auto',  W/full, "table-fixed",  "overflow-auto",
 
 expansion_container = [mr/st/8, bg/gray/1, shdw.sm, fz.lg]
 
+togglebtn = ["q-ma-md"]
+
 
 def halign(align="center"):
     """
