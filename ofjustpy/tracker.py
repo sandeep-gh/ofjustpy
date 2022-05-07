@@ -185,11 +185,11 @@ class sessionctx:
 
     def __enter__(self):
         print("entering the context")
-        return
+        return curr_session_ctx.stubStore
 
     def __exit__(self, type, value, traceback):
         global curr_session_ctx
-        print("exit a session context")
+        print("exiting session context")
         curr_session_ctx = None
         pass
 

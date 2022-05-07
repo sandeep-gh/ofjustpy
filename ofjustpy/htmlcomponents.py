@@ -40,7 +40,6 @@ class HCC(jp.Div):
 
 class StackG(HCC):
     def __init__(self, *args, **kwargs):
-        print("all kwargs passed as is")
         num_rows = kwargs.pop('num_rows', 2)
         num_cols = kwargs.pop('num_cols', 2)
         # pcp passed via Stub gets  incorporated in twsty_tags in genStubFunc
@@ -193,6 +192,7 @@ def Subsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp=[], *
         "heading", heading_text), Halign_(content_)], **kwargs)
 
 
+                   
 def KeyValue_(key: AnyStr, keyt: AnyStr, valuet: AnyStr, readonly=True, pcp=[], **kwargs):
     key_ = Span_("keyt", text=keyt, pcp=sty.left_cell)
     eq_ = Span_("eqt", text="=", pcp=sty.eq_cell)
@@ -215,6 +215,7 @@ def WithBanner_(key: AnyStr, banner_text: AnyStr, component_: Callable, pcp: Lis
     return StackH_(key, cgens=[Span_("banner", text=banner_text), component_], pcp=pcp, **kwargs)
 
 
+
 @trackStub
 def Halign_(content_: Callable, align="center", pcp=[], **kwargs):
     """
@@ -222,8 +223,11 @@ def Halign_(content_: Callable, align="center", pcp=[], **kwargs):
     """
     return Stub(f"Halign{content_.key}",  jp.Div, twsty_tags=[
         *pcp, *sty.halign(align)],     postrender=lambda dbref, tstub=content_: tstub(dbref), **kwargs)
-# TODO: implement default value
 
+# TODO: implement default value
+def Title_(key:AnyStr, title_text:AnyStr, pcp=[], align="center", **kwargs):
+    return Halign_(Span_(key, text=title_text, pcp=[*sty.title_text, *pcp]), align=align)
+                   
 
 @trackStub
 def Slider_(key: AnyStr, itemiter: List, pcp: List = [], **kwargs):
