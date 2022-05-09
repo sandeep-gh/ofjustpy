@@ -191,7 +191,8 @@ def Subsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp=[], *
     return StackV_(key, cgens=[SubheadingBanner_(
         "heading", heading_text), Halign_(content_)], **kwargs)
 
-
+def Prose_(key:AnyStr, prose_text:AnyStr, pcp=[], **kwargs):
+    return P_(key, text=prose_text, pcp = [*pcp, *sty.prose], **kwargs)
                    
 def KeyValue_(key: AnyStr, keyt: AnyStr, valuet: AnyStr, readonly=True, pcp=[], **kwargs):
     key_ = Span_("keyt", text=keyt, pcp=sty.left_cell)
