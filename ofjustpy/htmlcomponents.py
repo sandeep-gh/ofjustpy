@@ -5,9 +5,13 @@ import justpy as jp
 from .ui_styles import basesty, sty
 from tailwind_tags import tstr, W, full, jc, twcc2hex, bg, onetonine
 from .tracker import trackStub
-
+from dpath.util import set as dset, search as dsearch
+from .dpathutils import dget, dnew
 StubFunc_T = Callable[Any, Any]
 
+
+#https://stackoverflow.com/questions/44664040/type-hints-with-user-defined-classes/44664064#44664064
+from typing import Type
 
 class EventType(Enum):
     click = "click"
@@ -19,6 +23,8 @@ class EventType(Enum):
     change = "change"
 
 
+
+        
 class HCC(jp.Div):
     """
     HCC: html component container
@@ -386,7 +392,10 @@ def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwar
 
 # short tag for htmlcomponents
 @trackStub
-def WebPage_(key: AnyStr, page_type: AnyStr = 'tailwind', head_html_stmts: List[AnyStr] = [], cgens: List = [], **kwargs):
+def WebPage_(key: AnyStr,  head_html_stmts: List[AnyStr] = [], cgens: List = [], WPtype: Type[jp.WebPage] = jp.WebPage,  **kwargs):
+    """
+    WPtype: the WebPage class, either jp.WebPage or derived from it, jp.QuasarPage, or ojr.WebPage, 
+    """
     def postrender(wp, cgens=cgens):
         # TODO: declare session manager here
         wp.tailwind = False  # we inject our tailwind
@@ -398,10 +407,14 @@ def WebPage_(key: AnyStr, page_type: AnyStr = 'tailwind', head_html_stmts: List[
         wp.css = 'body { font-family: Inter; }'
         wp.body_classes = tstr(*wp.twsty_tags)
 
-    if page_type == 'tailwind':
-        stub = WPStub(key, jp.WebPage, twsty_tags=[
+
+    stub = WPStub(key, WPtype, twsty_tags=[
             *sty.wp], postrender=postrender, cgens=cgens, **kwargs)
-    elif page_type == 'quasar':
-        stub = WPStub(key, jp.QuasarPage, twsty_tags=[
-            *sty.wp], postrender=postrender, cgens=cgens,  **kwargs)
+    
+    # if page_type == 'tailwind':
+    #     stub = WPStub(key, WPtype, twsty_tags=[
+    #         *sty.wp], postrender=postrender, cgens=cgens, **kwargs)
+    # elif page_type == 'quasar':
+    #     stub = WPStub(key, jp.QuasarPage, twsty_tags=[
+    #         *sty.wp], postrender=postrender, cgens=cgens,  **kwargs)
     return stub
