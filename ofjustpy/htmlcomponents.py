@@ -1,9 +1,10 @@
+import collections
 from aenum import Enum
 from typing import List, AnyStr, Callable, Any
 from addict import Dict
 import justpy as jp
 from .ui_styles import basesty, sty
-from tailwind_tags import tstr, W, full, jc, twcc2hex, bg, onetonine
+from tailwind_tags import tstr, W, full, jc, twcc2hex, bg, onetonine, fz
 from .tracker import trackStub
 from dpath.util import set as dset, search as dsearch
 from .dpathutils import dget, dnew
@@ -21,6 +22,7 @@ class EventType(Enum):
     mouseleave = "mouseleave"
     input = "input"  # input is keyword of python
     change = "change"
+    submit = "submit"
 
 
 
@@ -35,11 +37,9 @@ class HCC(jp.Div):
         self.spathMap = Dict(track_changes=True)
 
     def addItems(self, cgens):
-        cdbref = [cgen(self) for cgen in cgens]
-
-        for dbref in cdbref:
-            self.spathMap[dbref.stub.spath] = dbref
-
+        collections.deque(map(lambda cgen: cgen(self), cgens), maxlen=0)
+        for stub in cgens:
+            self.spathMap[stub.spath] = stub.target
     def getItem(self, stub):
         return self.spathMap[stub.spath]
 
@@ -54,6 +54,41 @@ class StackG(HCC):
         super().__init__(*args,  twsty_tags=twsty_tags, **kwargs)
 
 
+class StackD(HCC):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    def addItems(self, cgens):
+        super().addItems(cgens)
+        
+        print ("StackD spathMap = ", self.spathMap)
+        for spath, dbref in self.spathMap.items():
+            dbref.set_class('hidden')
+
+        self.selected_card_spath = cgens[0].spath
+        selected_dbref = self.spathMap[self.selected_card_spath]
+        selected_dbref.remove_class('hidden')
+        selected_dbref.set_class('flex') #TODO: only if there was flex originally
+    def bring_to_front(self, spath):
+        '''
+        tapk: the target apk of du which needs to be brought in front
+        '''
+
+        tapk = spath  # f'{self.apk}_{tlid}'
+        if tapk in self.spathMap.keys():
+            #hide the current front
+            self.spathMap[self.selected_card_spath].set_class('hidden')
+            #make the selected card visible
+            selected_dbref = self.spathMap[tapk]
+            selected_dbref.remove_class('hidden')
+            selected_dbref.set_class('flex')  # workaround for eat-flex bug
+
+            self.selected_card_spath = tapk
+        else:
+            logger.debug(
+                f"debug: deck  does not have card {tapk}..skipping bring to front")
+        
+        
+        
 class Stub:
     def __init__(self, *args, **kwargs):
         self.key = args[0]
@@ -105,7 +140,11 @@ class Stub:
         self.eventhandlers[event_type.value] = handler
         return self
 
-
+    def appctx_trrules(self, ctxl):
+        """
+        ui transition rules over appstate context
+        """
+        pass
 class WPStub(Stub):
     def __init__(self, *args,  **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,7 +189,12 @@ Circle_ = genStubFunc(jp.Button, sty.circle)
 Span_ = genStubFunc(jp.Span, sty.span)
 InputChangeOnly_ = genStubFunc(jp.InputChangeOnly, sty.input)
 Input_ = genStubFunc(jp.Input, sty.input)
+Td_ = genStubFunc(jp.Td, sty.td)
 
+
+
+
+                
 # use glossy=True,
 # size="sm", label=label, value =False for toggle btn
 ToggleBtn_ = genStubFunc(jp.QToggle, sty.togglebtn)
@@ -162,6 +206,7 @@ StackH_ = genStubFunc(HCC, sty.stackh)
 StackW_ = genStubFunc(HCC, sty.stackw)
 # sty will be set in StackG:init using num_rows, num_cols keyword arguments
 StackG_ = genStubFunc(StackG, [])
+StackD_ = genStubFunc(StackD, sty.stackd)
 
 
 @trackStub
@@ -183,12 +228,19 @@ def LabeledInput_(key: AnyStr, label: AnyStr, placeholder: AnyStr,  input_type="
         input_ = Input_("input", placeholder=placeholder)
     return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, span_=span_, input_=input_: input_(span_(dbref)))
 
+@trackStub
+def Checkbox_(key:AnyStr, placeholder:AnyStr, val=False, pcp=[], **kwargs):
+    cbox_ = Input_(f"{key}cbox", type='checkbox',  value=val,
+                   pcp=['form-checkbox'])
+    span_ = Span_(f"{key}span", text=placeholder, pcp=[fz.sm])
+    return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, span_=span_, cbox_=cbox_: cbox_(span_(dbref)))
+    
 
 @trackStub
 def CheckboxInput_(key: AnyStr, placeholder: AnyStr, pcp=[], **kwargs):
     # TODO: make form-checkbox firstclass
-    cbox_ = Input_("cbox", type="checkbox", pcp=['form-checkbox'])
-    input_ = Input_("inp", type="text", placeholder=placeholder)
+    cbox_ = Input_(f"{key}cbox", type="checkbox", pcp=['form-checkbox'])
+    input_ = InputChangeOnly_(f"{key}inp", type="text", placeholder=placeholder)
     return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)), **kwargs)
 
 
@@ -223,6 +275,7 @@ def WithBanner_(key: AnyStr, banner_text: AnyStr, component_: Callable, pcp: Lis
 
 
 
+
 @trackStub
 def Halign_(content_: Callable, align="center", pcp=[], **kwargs):
     """
@@ -230,6 +283,12 @@ def Halign_(content_: Callable, align="center", pcp=[], **kwargs):
     """
     return Stub(f"Halign{content_.key}",  jp.Div, twsty_tags=[
         *pcp, *sty.halign(align)],     postrender=lambda dbref, tstub=content_: tstub(dbref), **kwargs)
+
+@trackStub
+def ExpansionContainer_(key: AnyStr, label: AnyStr, content_: AnyStr, pcp: List=[]):
+    return Stub(key, jp.QExpansionItem, twsty_tags=[*pcp, *sty.expansion_container], postrender=lambda dbref, tstub=content_:tstub(dbref), dense=True, header_class='bg-grey-1', label=label,)
+
+
 
 # TODO: implement default value
 def Title_(key:AnyStr, title_text:AnyStr, pcp=[], align="center", **kwargs):
@@ -340,7 +399,7 @@ def Form_(key: AnyStr, content_: Callable, submit_: Callable, pcp: List = [], **
     def postrender(dbref, c=content_, s=submit_):
         c(dbref)
         s(dbref)
-    return Stub(key, jp.Form, twsty_tags=[*sty.Form, *pcp], postrender=postrender, **kwargs)
+    return Stub(key, jp.Form, twsty_tags=[*sty.form, *pcp], postrender=postrender, **kwargs)
 
 
 @trackStub
@@ -362,6 +421,14 @@ def Select_(key: AnyStr, options: List, pcp: List = [], **kwargs):
 
 # TODO: how to deal with events at Div level
 
+@trackStub
+def Tr_(key, cgens, isodd=True, pcp=[], **kwargs):
+    return Stub(key, jp.Tr, twsty_tags=[*sty.tr[isodd], *pcp], postrender=lambda dbref, cgens=cgens: [_(dbref) for _ in cgens], **kwargs)
+
+
+@trackStub
+def Table_(key, cgens, pcp=[], **kwargs):
+    return Stub(key, jp.Table, twsty_tags=[*sty.tbl, *pcp], postrender=lambda dbref, cgens=cgens: [_(dbref) for _ in cgens], **kwargs)
 
 @trackStub
 def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwargs):
@@ -370,6 +437,7 @@ def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwar
     """
 
     return Stub(key, jp.Div, twsty_tags=[*sty.centering_div, *sty.spacing, *pcp], postrender=lambda dbref, input_=input_, button_=button_: button_(input_(dbref), **kwargs))
+
 
 
 # class StackV(HCC):
@@ -391,6 +459,8 @@ def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwar
 #                          text=text, value=text, twsty_tags=twsty_tags, **kwargs)
 
 # short tag for htmlcomponents
+
+
 @trackStub
 def WebPage_(key: AnyStr,  head_html_stmts: List[AnyStr] = [], cgens: List = [], WPtype: Type[jp.WebPage] = jp.WebPage,  **kwargs):
     """

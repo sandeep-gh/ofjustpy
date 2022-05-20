@@ -19,81 +19,16 @@ from addict import Dict
 # This is a global variable
 curr_session_ctx = None
 
-#from webapp_framework_tracking.dbrefBoard import register as dbrefBoard_register
+# session_id to session_ctx mapt
+# if session_ctx already exists for session_id return that.
+session_ctx_store = Dict() #a global variable
 
-
-#_hcs = Dict()
-#refBoard = Dict(track_changes=True)
-#_currTracker = _hcs
-#_currSpath = "/"
-#session_dict = Dict(track_changes=True)
-#session_dict.model = Dict(track_changes=True)
-
-
-# def build_hcdbref():
-#     """build a replica for _hcs
-#     but with values as dbref instead of stub
-#     """
-#     hcdbref = Dict()
-#     for k, v in walker(_hcs):
-#         dnew(hcdbref, k, v.key)
-
-#     return hcdbref
-
-
-# def get_sref(spath):
-#     return dget(_currTracker, spath)
-
-
-# def get_dbref(spath):
-#     """spath: stub path
-#     """
-#     hcgen = dget(_currTracker, spath)
-
-#     return hcgen.target
-
-# def save_sty(model: Dict, arg: Dict):
-#     logger.debug("In save sty")
-#     styreport = session_dict['styj']
-#     opts = jsbeautifier.default_options()
-#     res = jsbeautifier.beautify(json.dumps(session_dict['styj']), opts)
-#     with open("styreport.json", "w") as fh:
-#         fh.write(res)
-#     pass
-
-
-# def load_sty(model: Dict, arg: Dict):
-#     logger.debug("loading sty")
-#     with open("styreport.json", "r") as fh:
-#         session_dict['styj'] = Dict(json.loads(fh.read()))
-
-
-# class uictx:
-#     def __init__(self, ctx, **kwargs):
-
-#         self.ctx = ctx
-#         pass
-
-#     def __enter__(self):
-#         global _currTracker
-#         global _currSpath
-#         if self.ctx not in _currTracker:
-#             _currTracker[self.ctx] = Dict()
-#         self.pctx = _currTracker
-#         self.pspath = _currSpath
-#         _currTracker = _currTracker[self.ctx]
-#         _currSpath = _currSpath + f"{self.ctx}/"
-#         return _currTracker
-
-#     def __exit__(self, type, value, traceback):
-#         global _currTracker
-#         global _currSpath
-#         _currTracker = self.pctx
-#         _currSpath = self.pspath
-#         pass
 
 
 def get_session_manager(session_id):
+    global session_ctx_store
+    if session_id in session_ctx_store:
+        return session_ctx_store[session_id]
     session_ctx = Dict()
     session_ctx.stubStore = Dict(track_changes=True)
     session_ctx.refBoard = Dict(track_changes=True)
@@ -169,6 +104,7 @@ def get_session_manager(session_id):
         return stub
 
     session_ctx.track_stubGen_wrapper = track_stubGen_wrapper
+    session_ctx_store[session_id] = session_ctx
     return session_ctx
 
 

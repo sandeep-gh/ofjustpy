@@ -39,6 +39,7 @@ A = [*spacing]
 stackv = [db.f, flx.col]
 stackh = [db.f, *spacing]
 stackw = [db.f, flx.wrap, jc.center, ]
+stackd = [db.f, *spacing]
 # ================ copied from fancy str--using empty ================
 _ = dbr = Dict()
 _.banner = []
@@ -131,7 +132,7 @@ expansion_container = [mr/st/8, bg/gray/1, shdw.sm, fz.lg]
 
 togglebtn = ["q-ma-md"]
 
-
+checkbox = ['form-checkbox']
 def halign(align="center"):
     """
     align the contents : options are start, end, center, between, evenly, around
