@@ -1,3 +1,8 @@
+import logging
+import sys
+if sys:
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
 import collections
 from aenum import Enum
 from typing import List, AnyStr, Callable, Any
@@ -25,7 +30,40 @@ class EventType(Enum):
     submit = "submit"
 
 
+class Nav(jp.Nav):
+    """
+    HCC: html component container
+    """
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.spathMap = Dict(track_changes=True)
+
+    def addItems(self, cgens):
+        collections.deque(map(lambda cgen: cgen(self), cgens), maxlen=0)
+        for stub in cgens:
+            self.spathMap[stub.spath] = stub.target
+    def getItem(self, stub):
+        return self.spathMap[stub.spath]
+
+class Footer(jp.Footer):
+    """
+    HCC: html component container
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.spathMap = Dict(track_changes=True)
+
+    def addItems(self, cgens):
+        collections.deque(map(lambda cgen: cgen(self), cgens), maxlen=0)
+        for stub in cgens:
+            self.spathMap[stub.spath] = stub.target
+    def getItem(self, stub):
+        return self.spathMap[stub.spath]
+    
+
+    
         
 class HCC(jp.Div):
     """
@@ -60,7 +98,6 @@ class StackD(HCC):
     def addItems(self, cgens):
         super().addItems(cgens)
         
-        print ("StackD spathMap = ", self.spathMap)
         for spath, dbref in self.spathMap.items():
             dbref.set_class('hidden')
 
@@ -96,17 +133,16 @@ class Stub:
         self.target = None
         self.eventhandlers = {}
         self.args = args
-        self.kwargs = kwargs
+
         self.postrender = kwargs.pop('postrender', None)
         if self.key == "wp":
-            print("in init stub")
             print(kwargs)
         self.cgens = kwargs.pop('cgens', None)
         redirects = kwargs.pop('redirects', None)
         self.redirects = None
         if redirects:
             self.redirects = Dict(redirects)
-
+        self.kwargs = kwargs
         pass
 
     def __call__(self, a):
@@ -181,7 +217,7 @@ def genStubFunc(jpf, stytags):
         return Stub(key, jpf, twsty_tags=twsty_tags, **kwargs)
     return func
 
-
+Div_ = genStubFunc(jp.Div, sty.div)
 P_ = genStubFunc(jp.P, sty.P)
 A_ = genStubFunc(jp.A, sty.A)
 Label_ = genStubFunc(jp.Label, sty.label)
@@ -190,6 +226,7 @@ Span_ = genStubFunc(jp.Span, sty.span)
 InputChangeOnly_ = genStubFunc(jp.InputChangeOnly, sty.input)
 Input_ = genStubFunc(jp.Input, sty.input)
 Td_ = genStubFunc(jp.Td, sty.td)
+Divider_ = genStubFunc(jp.Hr, sty.hr)
 
 
 
@@ -204,28 +241,40 @@ Container_ = genStubFunc(HCC, sty.container)
 StackV_ = genStubFunc(HCC, sty.stackv)
 StackH_ = genStubFunc(HCC, sty.stackh)
 StackW_ = genStubFunc(HCC, sty.stackw)
+StackD_ = genStubFunc(StackD, sty.stackd)
 # sty will be set in StackG:init using num_rows, num_cols keyword arguments
 StackG_ = genStubFunc(StackG, [])
-StackD_ = genStubFunc(StackD, sty.stackd)
+Nav_ = genStubFunc(Nav, sty.nav)
+
+Footer_ = genStubFunc(Footer, sty.footer)
+
 
 
 @trackStub
 def SubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp: List = [], heading_text_sty=sty.subheading_text,  **kwargs):
     # = genStubFunc(jp.Div, sty.subheading_box)
     spanl_ = Span_("headingL", text=heading_text, pcp=heading_text_sty)
+    spanm_ = Span_("headingR", text=heading_text, pcp=[
+        *heading_text_sty, "invisible"])
+    spanx_ = Span_("headingR", text=heading_text, pcp=[
+        *heading_text_sty, "invisible"])
     spanr_ = Span_("headingR", text=heading_text, pcp=[
         *heading_text_sty, "invisible"])
-    return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.subheading_box], postrender=lambda dbref, spanl_=spanl_, spanr_=spanr_: spanr_(spanl_(dbref), **kwargs))
+    return Stub(key,
+                jp.Div,
+                twsty_tags=[*pcp, *sty.subheading_box],
+                postrender=lambda dbref,  spanl_=spanl_, spanm_=spanm_, spanr_=spanr_: spanr_(spanx_(spanm_(spanl_(dbref)))),
+                **kwargs)
 
 
 @trackStub
-def LabeledInput_(key: AnyStr, label: AnyStr, placeholder: AnyStr,  input_type="changeonly", pcp=[], **kwargs):
+def LabeledInput_(key: AnyStr, label: AnyStr, placeholder: AnyStr,  changeonly=True, input_type="text", pcp=[], **kwargs):
     span_ = Span_("iname", text=label, pcp=sty.span)
-    if input_type == "changeonly":
+    if changeonly:
         input_ = InputChangeOnly_(
-            "input", placeholder=placeholder, type=type)
+            "input", placeholder=placeholder, type=input_type)
     else:
-        input_ = Input_("input", placeholder=placeholder)
+        input_ = Input_("input", placeholder=placeholder, type=input_type)
     return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, span_=span_, input_=input_: input_(span_(dbref)))
 
 @trackStub
@@ -247,10 +296,10 @@ def CheckboxInput_(key: AnyStr, placeholder: AnyStr, pcp=[], **kwargs):
 @trackStub
 def Subsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp=[], **kwargs):
     return StackV_(key, cgens=[SubheadingBanner_(
-        "heading", heading_text), Halign_(content_)], **kwargs)
+        "heading", heading_text), Halign_(content_)], pcp=pcp, **kwargs)
 
-def Prose_(key:AnyStr, prose_text:AnyStr, pcp=[], **kwargs):
-    return P_(key, text=prose_text, pcp = [*pcp, *sty.prose], **kwargs)
+def Prose_(key:AnyStr, text:AnyStr, pcp=[], **kwargs):
+    return P_(key, text=text, pcp = [*pcp, *sty.prose], **kwargs)
                    
 def KeyValue_(key: AnyStr, keyt: AnyStr, valuet: AnyStr, readonly=True, pcp=[], **kwargs):
     key_ = Span_("keyt", text=keyt, pcp=sty.left_cell)
@@ -267,7 +316,7 @@ def SubsubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp=[], **kwargs):
 
 def Subsubsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp: List = [], **kwargs):
     return StackV_(key, cgens=[SubsubheadingBanner_(
-        "heading", heading_text), Halign_(content_)], **kwargs)
+        "heading", heading_text), Halign_(content_)], pcp=pcp, **kwargs)
 
 
 def WithBanner_(key: AnyStr, banner_text: AnyStr, component_: Callable, pcp: List = [], **kwargs):
@@ -283,6 +332,7 @@ def Halign_(content_: Callable, align="center", pcp=[], **kwargs):
     """
     return Stub(f"Halign{content_.key}",  jp.Div, twsty_tags=[
         *pcp, *sty.halign(align)],     postrender=lambda dbref, tstub=content_: tstub(dbref), **kwargs)
+
 
 @trackStub
 def ExpansionContainer_(key: AnyStr, label: AnyStr, content_: AnyStr, pcp: List=[]):
@@ -337,7 +387,6 @@ def MainColorSelector_(key: AnyStr, **kwargs):
 @trackStub
 def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
     def on_main_color_select(dbref, msg):
-        print("main color selected ", msg.value)
         # pass the selection to parent component
         dbref.colorSelector.maincolor_value = msg.value
         colortag = sty.get_color_tag(dbref.colorSelector.maincolor_value)
@@ -347,7 +396,6 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
         EventType.click, on_main_color_select)
 
     def on_slider_select(dbref, msg):
-        print("slider selected with value = ", msg.value)
         # whatever value is computed pass to colorselector
         # pass the selection to parent component
         dbref.colorSelector.slider_value = int(msg.value)
@@ -462,24 +510,27 @@ def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwar
 
 
 @trackStub
-def WebPage_(key: AnyStr,  head_html_stmts: List[AnyStr] = [], cgens: List = [], WPtype: Type[jp.WebPage] = jp.WebPage,  **kwargs):
+def WebPage_(key: AnyStr,  head_html_stmts: List[AnyStr] = [], cgens: List = [], WPtype: Type[jp.WebPage] = jp.WebPage, pcp = [], **kwargs):
     """
     WPtype: the WebPage class, either jp.WebPage or derived from it, jp.QuasarPage, or ojr.WebPage, 
     """
     def postrender(wp, cgens=cgens):
         # TODO: declare session manager here
         wp.tailwind = False  # we inject our tailwind
-        wp.head_html = "\n".join([*head_html_stmts,
-                                  """<link rel = "stylesheet" href = "https://cdn.jsdelivr.net/npm/inter-ui@3.13.1/inter.min.css" > """,
-                                  """ <script src = "https://cdn.tailwindcss.com/" > </script >"""
-                                  ])
+        wp.head_html = "\n".join(head_html_stmts)
+        #tailwind comes bundled with svelte
+        # wp.head_html = "\n".join([*head_html_stmts,
+        #                           """<link rel = "stylesheet" href = "https://cdn.jsdelivr.net/npm/inter-ui@3.13.1/inter.min.css" > """,
+        #                           """ <script src = "https://cdn.tailwindcss.com/" > </script >"""
+        #                           ])
         # wp.head_html = "\n".join(head_html)
         wp.css = 'body { font-family: Inter; }'
         wp.body_classes = tstr(*wp.twsty_tags)
 
 
+
     stub = WPStub(key, WPtype, twsty_tags=[
-            *sty.wp], postrender=postrender, cgens=cgens, **kwargs)
+            *sty.wp, *pcp], postrender=postrender, cgens=cgens, **kwargs)
     
     # if page_type == 'tailwind':
     #     stub = WPStub(key, WPtype, twsty_tags=[
@@ -488,3 +539,5 @@ def WebPage_(key: AnyStr,  head_html_stmts: List[AnyStr] = [], cgens: List = [],
     #     stub = WPStub(key, jp.QuasarPage, twsty_tags=[
     #         *sty.wp], postrender=postrender, cgens=cgens,  **kwargs)
     return stub
+
+

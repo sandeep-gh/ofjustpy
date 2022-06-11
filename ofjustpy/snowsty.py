@@ -4,7 +4,7 @@ from tailwind_tags import *
 h1 = [xl3, lh.normal,  lh.normal, mr/st/0, mr/sb/2, text/gray/6]
 
 h2 = [xl, lh.normal,  lh.normal, mr/st/0, mr /
-      sb/2]  # "prose", "prose-2xl"
+      sb/1]  # "prose", "prose-2xl"
 
 h3 = [fz.lg, lh.normal,  lh.normal, mr/st/0, mr /
       sb/2]  # "prose", "prose-2xl"
@@ -12,7 +12,7 @@ h3 = [fz.lg, lh.normal,  lh.normal, mr/st/0, mr /
 para = [base, fw.light, relaxed, mr/st/0, mr/sb/4, ]
 
 
-container = [mr/x/auto, container]
+
 # ?? para.mr.sb = 5
 # type = "button"
 button = [bg/gray/1, fc/gray/6,  mr/sr/1, mr/sb/1, pd/x/4, pd/y/2, bold, Outline.n, bsw._, bsw.sm,
@@ -23,8 +23,9 @@ title_text = [xl6, fw.bold,  mr/st/0, mr/sb/2, text/gray/8]
 heading_box = [db.f, jc.around]
 heading_text = [*h1, fw.bold]
 subheading_box = [db.f, jc.around]
-subheading_text = [*h2, fw.bold, bsw.sm,
-                   sw/slate/"500/50"]  # "prose", "prose-2xl"
+subheading_text = [*h2, fw.bold, #bsw.sm, #shadows no good
+                   #sw/slate/"500/50"
+                   ]  # "prose", "prose-2xl"
 
 subsubheading_text = [*h3, fw.medium, bsw.lg,
                       sw/slate/"500/80"]  # "prose", "prose-2xl"
@@ -34,8 +35,8 @@ centering_div = [db.f, jc.center]
 span = [base, fw.light, relaxed, *spacing, ]
 form = [db.f, jc.center]
 theme = []  # default background, font, border, etc stuff
-P = [*spacing]
-A = [*spacing]
+P = [pd/x/2, pd/y/1, W/"11/12"]
+A = [fc/gray/6, pd/y/2, pd/x/4, hover(fc/gray/9)]
 stackv = [db.f, flx.col]
 stackh = [db.f, *spacing]
 stackw = [db.f, flx.wrap, jc.center, ]
@@ -63,7 +64,7 @@ title_banner = [
 
 title_span = [bdr.md, fc/gray/6, fz.xl, pd/2]
 span = [*theme, *spacing, db.f, ai.center]
-prose = [*spacing, fc/gray/6, prse.lg]  # TODO:use some other name than prose
+prose = [fc/gray/6, prse.lg]  # TODO:use some other name than prose
 #prose = [fc/gray/6, "prose", "prose-2xl"]
 
 divbutton = [db.f, jc.center]
@@ -73,7 +74,7 @@ divbutton = [db.f, jc.center]
 expansion_item = [mr/st/0, bg/gray/2, bsw.sm]
 
 inputJbutton = [pd/4, bg/gray/1, flex, jc.center, * border_style]
-select = [fz.sm, mr/x/"2", bg/"inherit"
+select = [fz.sm, mr/"2", bg/"inherit"
 
           ]
 selectwbanner = [bt.bd, bdr.md, bd/gray/1, pd/1, mr/x/2]
@@ -106,9 +107,16 @@ eq_cell = [*cell, jc.center, op.c]
 option = []
 label = [db.f, jc.center]
 
-wp = [bg/slate/"100/10"]
+wp = [bg/gray/2, bg/opacity/"25"]
 
+#TODO:z-10
+#W/full or max or screen is not working at all
+#nav  = [container, ppos.fixed, top/0, bg/green/6]
+nav  = [container, top/0] 
+footer = [mr/st/4, bsw, container]
+div = []
 
+hr = [mr/st/4, mr/sb/4, bt.bd, bd/gray/"400/20", bg/gray/"400/20", container]
 def stackG(num_cols, num_rows):
     return [db.g,  gap/1, G/cols/f'{num_cols}', G/rows/f'{num_rows}', gf.row]
 
@@ -138,3 +146,6 @@ def halign(align="center"):
     align the contents : options are start, end, center, between, evenly, around
     """
     return [db.f, getattr(jc, align)]
+
+#Caution keep this at the bottom
+container = [mr/x/auto, container]
