@@ -6,7 +6,7 @@ is extension to justpy -- a  webdevelopment framework in python (for more detail
 4. several higher order components build using ofjustpy framework, tailwind and svelte. 
 5. Tailwind tags are first class python expressions, instead of a long string. 
 
-## Usage
+## Description/Usage 
 ### A demo example -- for the impatient ones
 ```python
 import ofjustpy as oj
@@ -54,6 +54,14 @@ The key takeaway is that the webpage is build bottom up. First, the most atomic 
 Then higher order components are declared that contain previously declared component. The components are weaved together at the last step when the webpage instance is requested. 
 
 See here(todo) for a more comprehensive demo that showcases all the basic (or html components) and higher order components built using tailwind and svelte.
+
+### Advanced notes
+1. Checkout ![htmlcomponents](/ofjustpy/htmlcomponents.py) to see the list all htmlcomponent supported
+2. checkout justpy (https://justpy.io/) and [ofjustpy-react](https://github.com/sandeep-gh/ofjustpy-react) on handling frontend events
+3. checkout ofjustpy-extn for more advanced components (such as json navigator) build using ofjustpy
+
+
+Finally, if you are looking for a more detailed/comprehensive guide/tutorial, raise an issue and we can discuss there. 
 
 
 Developed by: www.monallabs.in
