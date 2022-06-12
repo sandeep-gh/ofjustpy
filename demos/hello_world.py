@@ -1,14 +1,3 @@
-# Ofjustpy: A functional webframework built using justpy
-is extension to justpy -- a  webdevelopment framework in python (for more details see ). Ofjustpy provides opinionated components which can be chained via functional paradigm. Additionally, it  provides
-1. hooks that track all the created components 
-2. organize components in a hierarchical context
-3. use svelte as the underlying frontend javascript engine 
-4. several higher order components build using ofjustpy framework, tailwind and svelte. 
-
-
-## Usage
-### A demo example -- for the impatient ones
-```python
 import ofjustpy as oj
 import justpy as jp
 from tailwind_tags import *
@@ -44,13 +33,3 @@ def wp_hello_world(request):
 
 app = jp.app
 jp.justpy(wp_hello_world, start_server=False)
-```
-
-The webpage will be rendered as:
-
-![Hello world page screenshot](/demos/ofjustpy_hello_world.png?raw=true "Optional Title")
-
-The key takeaway is that the webpage is build bottom up. First, the most atomic components are declared. 
-Then higher order components are declared that contain previously declared component. The components are weaved together at the last step when the webpage instance is requested. 
-
-See here(todo) for a more comprehensive demo that showcases all the basic (or html components) and higher order components built using tailwind and svelte.
