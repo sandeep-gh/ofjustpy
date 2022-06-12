@@ -4,7 +4,7 @@ is extension to justpy -- a  webdevelopment framework in python (for more detail
 2. organize components in a hierarchical context
 3. use svelte as the underlying frontend javascript engine 
 4. several higher order components build using ofjustpy framework, tailwind and svelte. 
-
+5. Tailwind tags are first class python expressions, instead of a long string. 
 
 ## Usage
 ### A demo example -- for the impatient ones
@@ -54,3 +54,6 @@ The key takeaway is that the webpage is build bottom up. First, the most atomic 
 Then higher order components are declared that contain previously declared component. The components are weaved together at the last step when the webpage instance is requested. 
 
 See here(todo) for a more comprehensive demo that showcases all the basic (or html components) and higher order components built using tailwind and svelte.
+
+
+Developed by: www.monallabs.in
