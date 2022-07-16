@@ -11,11 +11,12 @@ h3 = [fz.lg, lh.normal,  lh.normal, mr/st/0, mr /
 
 para = [base, fw.light, relaxed, mr/st/0, mr/sb/4, ]
 
-
+ul = [mr/2, pd/2, "list-disc", "list-inside"]
+li = []
 
 # ?? para.mr.sb = 5
 # type = "button"
-button = [bg/gray/1, fc/gray/6,  mr/sr/1, mr/sb/1, pd/x/4, pd/y/2, bold, Outline.n, bsw._, bsw.sm,
+button = [bg/gray/1, fc/gray/6,  mr/sr/1, mr/sb/1, pd/x/4, pd/y/2, bold, outline.n, bsw._, bsw.sm,
           bdr.md, bold,  "uppercase ease-linear transition-all duration-150 outline-none focus:outline-none", *hover(noop/bsw.md, bg/gray/2)]
 title_box = [db.f, jc.center]
 title_text = [xl6, fw.bold,  mr/st/0, mr/sb/2, text/gray/8]

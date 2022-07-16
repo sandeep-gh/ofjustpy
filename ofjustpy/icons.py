@@ -23,5 +23,5 @@ def chevronright_icon(a):
   <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
 </svg>"""
     # twsty_tags is important.. jp.Div looks for it.
-    svg = jp.parse_html(icon_svg, a=a, twsty_tags=[])
+    svg = jp.parse_html(icon_svg, a=a, width="16px", twsty_tags=[])
     return svg

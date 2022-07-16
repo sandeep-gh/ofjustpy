@@ -81,6 +81,9 @@ class HCC(jp.Div):
     def getItem(self, stub):
         return self.spathMap[stub.spath]
 
+# class Li(jp.Li):
+    
+    
 
 class StackG(HCC):
     def __init__(self, *args, **kwargs):
@@ -216,6 +219,7 @@ def genStubFunc(jpf, stytags):
         twsty_tags = [*stytags,  *pcp]
         return Stub(key, jpf, twsty_tags=twsty_tags, **kwargs)
     return func
+
 
 Div_ = genStubFunc(jp.Div, sty.div)
 P_ = genStubFunc(jp.P, sty.P)
@@ -516,7 +520,10 @@ def WebPage_(key: AnyStr,  head_html_stmts: List[AnyStr] = [], cgens: List = [],
     """
     def postrender(wp, cgens=cgens):
         # TODO: declare session manager here
-        wp.tailwind = False  # we inject our tailwind
+        #wp.tailwind = False  # we inject our tailwind
+        # not yet able to inject our own tailwind
+        wp.tailwind = True  # we inject our tailwind
+
         wp.head_html = "\n".join(head_html_stmts)
         #tailwind comes bundled with svelte
         # wp.head_html = "\n".join([*head_html_stmts,
