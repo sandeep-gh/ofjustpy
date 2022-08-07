@@ -5,7 +5,6 @@ from tailwind_tags import *
 
 
 def launcher(request):
-    wp = jp.WebPage()
 
     def on_btn_click(dbref, msg):
         print("circle clicked", dbref.text, msg.value)
@@ -47,8 +46,8 @@ def launcher(request):
         ]:
             yield _
 
-    mystackv = oj.Halign_(oj.StackV_(
-        "mystackv", cgens=[oj.Halign_(stub) for stub in stubs()]))
+    # mystackv = oj.Halign_(oj.StackV_(
+    #     "mystackv", cgens=[oj.Halign_(stub) for stub in stubs()]))
     # mystackh = oj.Halign_(oj.StackH_(
     #     "mystackh", cgens=[oj.Halign_(stub) for stub in stubs()]))
 
@@ -58,18 +57,37 @@ def launcher(request):
     # mystackg = oj.Halign_(oj.StackG_(
     #     "mystackh", num_rows=3, num_cols=3,  cgens=[oj.Halign_(stub) for stub in stubs()]))
     # mystackh(wp)
-    mystackv(wp)
+    #wp = jp.WebPage()
+    session_manager = oj.get_session_manager(request.session_id)
+    stubStore = session_manager.stubStore
+    with oj.sessionctx(session_manager):
+        with session_manager.uictx("tlctx") as tlctx:
+            mystackv = oj.Halign_(oj.StackV_(
+                "mystackv", cgens=[oj.Halign_(stub) for stub in stubs()]))
+            wp_ = oj.WebPage_("oa", cgens = [mystackv], title="myoa")
+    wp = wp_()
     # mystackw(wp)
     # mystackg(wp)
     # oj.Subsection_("subsection", "Grid display", mystackg)(wp)
     # oj.Subsubsection_("subsubsection", "Wrap display", mystackw)(wp)
     return wp
 
+jp.CastAsEndpoint(launcher, "/", "cases_and_mounts")
 
 #wp = jp.WebPage()
 # circle = circleStub(wp)
 # print(circle.twsty_tags)
-#wp = launcher(None)
+# request = Dict()
+# request.session_id = 'abc'
+# wp = launcher(request)
 app = jp.app
 jp.justpy(launcher, start_server=False)
 #wp = launcher(None)
+
+
+
+
+
+
+
+

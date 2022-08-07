@@ -32,7 +32,7 @@ class EventType(Enum):
 
 class Nav(jp.Nav):
     """
-    HCC: html component container
+
     """
 
     def __init__(self, **kwargs):
@@ -48,7 +48,7 @@ class Nav(jp.Nav):
 
 class Footer(jp.Footer):
     """
-    HCC: html component container
+
     """
 
     def __init__(self, **kwargs):
@@ -65,27 +65,27 @@ class Footer(jp.Footer):
 
     
         
-class HCC(jp.Div):
-    """
-    HCC: html component container
-    """
+# class HCC(jp.Div):
+#     """
+#     HCC: html component container
+#     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.spathMap = Dict(track_changes=True)
+#     def __init__(self, **kwargs):
+#         super().__init__(**kwargs)
+#         self.spathMap = Dict(track_changes=True)
 
-    def addItems(self, cgens):
-        collections.deque(map(lambda cgen: cgen(self), cgens), maxlen=0)
-        for stub in cgens:
-            self.spathMap[stub.spath] = stub.target
-    def getItem(self, stub):
-        return self.spathMap[stub.spath]
+#     def addItems(self, cgens):
+#         collections.deque(map(lambda cgen: cgen(self), cgens), maxlen=0)
+#         for stub in cgens:
+#             self.spathMap[stub.spath] = stub.target
+#     def getItem(self, stub):
+#         return self.spathMap[stub.spath]
 
-# class Li(jp.Li):
+# # class Li(jp.Li):
     
     
 
-class StackG(HCC):
+class StackG(jp.Div):
     def __init__(self, *args, **kwargs):
         num_rows = kwargs.pop('num_rows', 2)
         num_cols = kwargs.pop('num_cols', 2)
@@ -95,7 +95,7 @@ class StackG(HCC):
         super().__init__(*args,  twsty_tags=twsty_tags, **kwargs)
 
 
-class StackD(HCC):
+class StackD(jp.Div):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     def addItems(self, cgens):
@@ -204,7 +204,7 @@ class WPStub(Stub):
 
         # attach event handlers
         if self.cgens:
-            # wp is not an HCC
+
             for cgen in self.cgens:
                 cgen(self.target)
         # return anchor so that other components can hang on to it
@@ -223,7 +223,11 @@ def genStubFunc(jpf, stytags):
 
 Div_ = genStubFunc(jp.Div, sty.div)
 P_ = genStubFunc(jp.P, sty.P)
+Li_ = genStubFunc(jp.Li, sty.li)
+Ul_ = genStubFunc(jp.Ul, sty.ul)
+Ol_ = genStubFunc(jp.Ol, sty.ol)
 A_ = genStubFunc(jp.A, sty.A)
+Br_ = genStubFunc(jp.Br, [])
 Label_ = genStubFunc(jp.Label, sty.label)
 Circle_ = genStubFunc(jp.Button, sty.circle)
 Span_ = genStubFunc(jp.Span, sty.span)
@@ -231,7 +235,7 @@ InputChangeOnly_ = genStubFunc(jp.InputChangeOnly, sty.input)
 Input_ = genStubFunc(jp.Input, sty.input)
 Td_ = genStubFunc(jp.Td, sty.td)
 Divider_ = genStubFunc(jp.Hr, sty.hr)
-
+Img_ = genStubFunc(jp.Img, sty.img)
 
 
 
@@ -241,10 +245,10 @@ Divider_ = genStubFunc(jp.Hr, sty.hr)
 ToggleBtn_ = genStubFunc(jp.QToggle, sty.togglebtn)
 Textarea_ = genStubFunc(jp.Textarea, sty.textarea)
 Option_ = genStubFunc(jp.Option, sty.option)
-Container_ = genStubFunc(HCC, sty.container)
-StackV_ = genStubFunc(HCC, sty.stackv)
-StackH_ = genStubFunc(HCC, sty.stackh)
-StackW_ = genStubFunc(HCC, sty.stackw)
+Container_ = genStubFunc(jp.Div, sty.container)
+StackV_ = genStubFunc(jp.Div, sty.stackv)
+StackH_ = genStubFunc(jp.Div, sty.stackh)
+StackW_ = genStubFunc(jp.Div, sty.stackw)
 StackD_ = genStubFunc(StackD, sty.stackd)
 # sty will be set in StackG:init using num_rows, num_cols keyword arguments
 StackG_ = genStubFunc(StackG, [])
@@ -262,12 +266,12 @@ def SubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp: List = [], heading
         *heading_text_sty, "invisible"])
     spanx_ = Span_("headingR", text=heading_text, pcp=[
         *heading_text_sty, "invisible"])
-    spanr_ = Span_("headingR", text=heading_text, pcp=[
-        *heading_text_sty, "invisible"])
+    # spanr_ = Span_("headingR", text=heading_text, pcp=[
+    #     *heading_text_sty, "invisible"])
     return Stub(key,
                 jp.Div,
                 twsty_tags=[*pcp, *sty.subheading_box],
-                postrender=lambda dbref,  spanl_=spanl_, spanm_=spanm_, spanr_=spanr_: spanr_(spanx_(spanm_(spanl_(dbref)))),
+                postrender=lambda dbref,  spanl_=spanl_, spanm_=spanm_: spanx_(spanm_(spanl_(dbref))),
                 **kwargs)
 
 
@@ -315,12 +319,12 @@ def KeyValue_(key: AnyStr, keyt: AnyStr, valuet: AnyStr, readonly=True, pcp=[], 
 
 
 def SubsubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp=[], **kwargs):
-    return SubheadingBanner_(key, heading_text, pcp=[], heading_text_sty=sty.subsubheading_text, **kwargs)
+    return SubheadingBanner_(key, heading_text, pcp=pcp, heading_text_sty=sty.subsubheading_text, **kwargs)
 
 
 def Subsubsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp: List = [], **kwargs):
     return StackV_(key, cgens=[SubsubheadingBanner_(
-        "heading", heading_text), Halign_(content_)], pcp=pcp, **kwargs)
+        "heading", heading_text, pcp=[]), Halign_(content_, align="center")], pcp=pcp, **kwargs)
 
 
 def WithBanner_(key: AnyStr, banner_text: AnyStr, component_: Callable, pcp: List = [], **kwargs):
@@ -440,7 +444,7 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
     # TODO: fix spacing
     # TODO: event handling
     # return StackH_(key, cgens=[mainColorSelector_, shades_])
-    return Stub(key, HCC, twsty_tags=[*pcp, *sty.stackh], postrender=postrender, redirects=[('click', on_click_hook)], **kwargs)
+    return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.stackh], postrender=postrender, redirects=[('click', on_click_hook)], **kwargs)
 
 
 # TODO: toggleBtn, expansionContainer

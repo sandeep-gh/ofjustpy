@@ -116,16 +116,14 @@ class sessionctx:
                 f"Fatal error: building new session ctx within an existing one {curr_session_ctx} {session_ctx}")
 
         curr_session_ctx = session_ctx
-        print("current session context is set")
+
         pass
 
     def __enter__(self):
-        print("entering the context")
         return curr_session_ctx.stubStore
 
     def __exit__(self, type, value, traceback):
         global curr_session_ctx
-        print("exiting session context")
         curr_session_ctx = None
         pass
 

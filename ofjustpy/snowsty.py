@@ -12,8 +12,9 @@ h3 = [fz.lg, lh.normal,  lh.normal, mr/st/0, mr /
 para = [base, fw.light, relaxed, mr/st/0, mr/sb/4, ]
 
 ul = [mr/2, pd/2, "list-disc", "list-inside"]
+ol = [mr/2, pd/2, W/"1/2", "list-disc", "list-inside"]
 li = []
-
+img = [mr/2, pd/2]
 # ?? para.mr.sb = 5
 # type = "button"
 button = [bg/gray/1, fc/gray/6,  mr/sr/1, mr/sb/1, pd/x/4, pd/y/2, bold, outline.n, bsw._, bsw.sm,
@@ -28,16 +29,17 @@ subheading_text = [*h2, fw.bold, #bsw.sm, #shadows no good
                    #sw/slate/"500/50"
                    ]  # "prose", "prose-2xl"
 
-subsubheading_text = [*h3, fw.medium, bsw.lg,
-                      sw/slate/"500/80"]  # "prose", "prose-2xl"
+subsubheading_text = [*h3, fw.medium, W/96 #bsw.lg,
+                      #sw/slate/"500/80"
+                      ]  # "prose", "prose-2xl"
 
 spacing = [pd/1]
 centering_div = [db.f, jc.center]
 span = [base, fw.light, relaxed, *spacing, ]
 form = [db.f, jc.center]
 theme = []  # default background, font, border, etc stuff
-P = [pd/x/2, pd/y/1, W/"11/12"]
-A = [fc/gray/6, pd/y/2, pd/x/4, hover(fc/gray/9)]
+P = [pd/x/2, pd/y/1] # W/"11/12" <-- this should be done optionally
+A = [fc/gray/6, pd/y/2,  hover(fc/gray/9)] #pd/x/4 : again optionally
 stackv = [db.f, flx.col]
 stackh = [db.f, *spacing]
 stackw = [db.f, flx.wrap, jc.center, ]
@@ -64,7 +66,7 @@ title_banner = [
 
 
 title_span = [bdr.md, fc/gray/6, fz.xl, pd/2]
-span = [*theme, *spacing, db.f, ai.center]
+#span = [*theme, *spacing, db.f, ai.center]
 prose = [fc/gray/6, prse.lg]  # TODO:use some other name than prose
 #prose = [fc/gray/6, "prose", "prose-2xl"]
 
