@@ -19,8 +19,14 @@ img = [mr/2, pd/2]
 # type = "button"
 button = [bg/gray/1, fc/gray/6,  mr/sr/1, mr/sb/1, pd/x/4, pd/y/2, bold, outline.n, bsw._, bsw.sm,
           bdr.md, bold,  "uppercase ease-linear transition-all duration-150 outline-none focus:outline-none", *hover(noop/bsw.md, bg/gray/2)]
-title_box = [db.f, jc.center]
+#title_box = [db.f, jc.center]
 title_text = [xl6, fw.bold,  mr/st/0, mr/sb/2, text/gray/8]
+subtitle_text = [xl4, fw.medium,  mr/st/1, mr/sb/2, text/gray/8]
+
+# title_banner = [
+#     db.f, jc.center, *spacing]
+
+#title_span = [bdr.md, fc/gray/6, fz.xl, pd/2]
 
 heading_box = [db.f, jc.around]
 heading_text = [*h1, fw.bold]
@@ -35,11 +41,13 @@ subsubheading_text = [*h3, fw.medium, W/96 #bsw.lg,
 
 spacing = [pd/1]
 centering_div = [db.f, jc.center]
-span = [base, fw.light, relaxed, *spacing, ]
+#span = [base, fw.light, relaxed, *spacing, ]
+span = [pd/1]
+
 form = [db.f, jc.center]
 theme = []  # default background, font, border, etc stuff
 P = [pd/x/2, pd/y/1] # W/"11/12" <-- this should be done optionally
-A = [fc/gray/6, pd/y/2,  hover(fc/gray/9)] #pd/x/4 : again optionally
+A = [fc/gray/6, pd/1, pd/x/1,  hover(fc/gray/9)] #pd/x/4 : again optionally
 stackv = [db.f, flx.col]
 stackh = [db.f, *spacing]
 stackw = [db.f, flx.wrap, jc.center, ]
@@ -61,11 +69,7 @@ heading = heading_box
 heading2 = subheading_box
 heading_span = heading_text
 heading2_span = subheading_text
-title_banner = [
-    db.f, jc.center, *spacing]
 
-
-title_span = [bdr.md, fc/gray/6, fz.xl, pd/2]
 #span = [*theme, *spacing, db.f, ai.center]
 prose = [fc/gray/6, prse.lg]  # TODO:use some other name than prose
 #prose = [fc/gray/6, "prose", "prose-2xl"]

@@ -1,9 +1,22 @@
+import logging
+import os
+
+if os:
+    try:
+        os.remove("launcher.log")
+    except:
+        pass
+
+import sys
+if sys:
+    FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+    logging.basicConfig(filename="launcher.log",
+                        level=logging.DEBUG, format=FORMAT)
+
+  
 import ofjustpy as oj
 import justpy as jp
 from tailwind_tags import *
-
-
-@jp.SetRoute("/hello_world")
 def wp_hello_world(request):
     session_id = request.session_id
     session_manager = oj.get_session_manager(session_id)
@@ -30,6 +43,10 @@ def wp_hello_world(request):
                              title="a svelte page")()
 
         return wp
-
+#jp.CastAsEndpoint(wp_hello_world, "/", "hello_world_entry_point")
+jp.Route("/", wp_hello_world)
 app = jp.app
-jp.justpy(wp_hello_world, start_server=False)
+#jp.justpy(wp_hello_world, start_server=False)
+#from starlette.testclient import TestClient
+#client = TestClient(app)
+#response = client.get('/') 

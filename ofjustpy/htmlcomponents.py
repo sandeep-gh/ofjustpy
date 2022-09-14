@@ -13,6 +13,7 @@ from tailwind_tags import tstr, W, full, jc, twcc2hex, bg, onetonine, fz
 from .tracker import trackStub
 from dpath.util import set as dset, search as dsearch
 from .dpathutils import dget, dnew
+import traceback
 StubFunc_T = Callable[Any, Any]
 
 
@@ -179,11 +180,6 @@ class Stub:
         self.eventhandlers[event_type.value] = handler
         return self
 
-    def appctx_trrules(self, ctxl):
-        """
-        ui transition rules over appstate context
-        """
-        pass
 class WPStub(Stub):
     def __init__(self, *args,  **kwargs):
         super().__init__(*args, **kwargs)
@@ -301,10 +297,15 @@ def CheckboxInput_(key: AnyStr, placeholder: AnyStr, pcp=[], **kwargs):
     return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)), **kwargs)
 
 
-@trackStub
+#@trackStub
 def Subsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp=[], **kwargs):
-    return StackV_(key, cgens=[SubheadingBanner_(
-        "heading", heading_text), Halign_(content_)], pcp=pcp, **kwargs)
+    return StackV_(key,
+                   cgens=[SubheadingBanner_("heading", heading_text),
+                          Halign_(content_)
+                          ],
+                   pcp=pcp,
+                   **kwargs
+                   )
 
 def Prose_(key:AnyStr, text:AnyStr, pcp=[], **kwargs):
     return P_(key, text=text, pcp = [*pcp, *sty.prose], **kwargs)
@@ -345,6 +346,10 @@ def Halign_(content_: Callable, align="center", pcp=[], **kwargs):
 @trackStub
 def ExpansionContainer_(key: AnyStr, label: AnyStr, content_: AnyStr, pcp: List=[]):
     return Stub(key, jp.QExpansionItem, twsty_tags=[*pcp, *sty.expansion_container], postrender=lambda dbref, tstub=content_:tstub(dbref), dense=True, header_class='bg-grey-1', label=label,)
+
+
+def SubTitle_(key:AnyStr, title_text:AnyStr, pcp=[], align="center", **kwargs):
+    return Halign_(Span_(key, text=title_text, pcp=[*sty.subtitle_text, *pcp]), align=align)
 
 
 
@@ -396,6 +401,8 @@ def MainColorSelector_(key: AnyStr, **kwargs):
 def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
     def on_main_color_select(dbref, msg):
         # pass the selection to parent component
+        #traceback.print_stack(file=sys.stdout)
+        print ("calling main_color_select")
         dbref.colorSelector.maincolor_value = msg.value
         colortag = sty.get_color_tag(dbref.colorSelector.maincolor_value)
         dbref.colorSelector.component_clicked = 'mainColorSelector'
@@ -406,6 +413,7 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
     def on_slider_select(dbref, msg):
         # whatever value is computed pass to colorselector
         # pass the selection to parent component
+        print ("on slider select")
         dbref.colorSelector.slider_value = int(msg.value)
         dbref.colorSelector.component_clicked = 'slider'
         pass
@@ -413,11 +421,13 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
         EventType.click, on_slider_select)
 
     def update_slider(colortag, shades_=shades_):
+        print ("update slider")
         for cs in shades_.circle_stubs:
             cref = cs.target
             shid = int(cref.value)
             cref.twcc = f"{colortag}-{shid}00"
             # TODO: also update twsty_tags
+            print("update slider = ", f"bg-{colortag}-{shid}00")
             cref.set_class(f"bg-{colortag}-{shid}00")
 
     def postrender(dbref):
@@ -429,6 +439,7 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
         dbref.component_clicked = None
 
     def on_click_hook(dbref, msg):
+        print ("CS: on_click_hook")
         main_color = dbref.maincolor_value
         shade = dbref.slider_value
 

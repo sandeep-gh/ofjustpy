@@ -64,7 +64,7 @@ def launcher(request):
         with session_manager.uictx("tlctx") as tlctx:
             mystackv = oj.Halign_(oj.StackV_(
                 "mystackv", cgens=[oj.Halign_(stub) for stub in stubs()]))
-            wp_ = oj.WebPage_("oa", cgens = [mystackv], title="myoa")
+            wp_ = oj.WebPage_("oa", cgens = [mystackv], template_file='svelte.html', title="myoa")
     wp = wp_()
     # mystackw(wp)
     # mystackg(wp)
@@ -72,8 +72,8 @@ def launcher(request):
     # oj.Subsubsection_("subsubsection", "Wrap display", mystackw)(wp)
     return wp
 
-jp.CastAsEndpoint(launcher, "/", "cases_and_mounts")
-
+#jp.CastAsEndpoint(launcher, "/", "cases_and_mounts")
+jp.Route("/", launcher)
 #wp = jp.WebPage()
 # circle = circleStub(wp)
 # print(circle.twsty_tags)
