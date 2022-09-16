@@ -17,6 +17,10 @@ if sys:
 import ofjustpy as oj
 import justpy as jp
 from tailwind_tags import *
+
+app = jp.app
+
+@app.jproute("/", name="homepage")
 def wp_hello_world(request):
     session_id = request.session_id
     session_manager = oj.get_session_manager(session_id)
@@ -42,11 +46,15 @@ def wp_hello_world(request):
                          template_file='svelte.html',
                              title="a svelte page")()
 
+        # wp = oj.WebPage_("wp_hello_world",
+        #                  cgens= [stubStore.tlc],
+        #                  title="a svelte page")()
+
         return wp
 #jp.CastAsEndpoint(wp_hello_world, "/", "hello_world_entry_point")
-jp.Route("/", wp_hello_world)
-app = jp.app
+#jp.Route("/", wp_hello_world)
+
 #jp.justpy(wp_hello_world, start_server=False)
-#from starlette.testclient import TestClient
-#client = TestClient(app)
-#response = client.get('/') 
+# from starlette.testclient import TestClient
+# client = TestClient(app)
+# response = client.get('/') 

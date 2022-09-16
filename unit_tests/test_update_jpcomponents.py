@@ -52,4 +52,5 @@ def launcher(request):
 
 
 app = jp.app
-jp.justpy(launcher, start_server=False)
+app.add_jproute("/", launcher)
+#jp.justpy(launcher, start_server=False)
