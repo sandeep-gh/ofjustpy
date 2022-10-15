@@ -76,7 +76,7 @@ def walker(adict, ppath="", guards=None, internal=False):
 
         except Exception as e:
             print(f"in walker exception {ppath} {key} {e}")
-            raise ValueError
+            raise e
 
 
 def stitch_from_dictiter(from_iter):
@@ -107,5 +107,6 @@ def dupdate(addict, path, value):
         dpop(addict, path)
 
     except Exception as e:
-        raise e
+        logger.debug(f"path {path} not present..skipping")
+        #raise e
     dnew(addict, path, value)

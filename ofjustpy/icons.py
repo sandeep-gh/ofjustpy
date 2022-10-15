@@ -25,3 +25,10 @@ def chevronright_icon(a):
     # twsty_tags is important.. jp.Div looks for it.
     svg = jp.parse_html(icon_svg, a=a, width="16px", twsty_tags=[])
     return svg
+
+def minus_icon(adbref):
+    minus_icon_svg = """<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+</svg>"""
+    svg = jp.parse_html(minus_icon_svg, a=adbref)
+    return svg

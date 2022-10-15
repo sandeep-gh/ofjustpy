@@ -17,10 +17,8 @@ li = []
 img = [mr/2, pd/2]
 # ?? para.mr.sb = 5
 # type = "button"
-button = [bg/gray/1, fc/gray/6,  mr/sr/1, mr/sb/1, pd/x/4, pd/y/2, bold, olsty._, bsw._, bsw.sm,
-           bold,  tt.u, *hover(noop/bsw.md, bg/gray/2, outline/4, bdr.md)]
-
-
+button = [bg/gray/1, fc/gray/6,  mr/sr/1, mr/sb/1, pd/x/4, pd/y/2, bold, bsw._, bsw.sm,
+          bdr.md, bold,  "uppercase ease-linear transition-all duration-150", *hover(noop/bsw.md, bg/gray/2)]
 #title_box = [db.f, jc.center]
 title_text = [xl6, fw.bold,  mr/st/0, mr/sb/2, text/gray/8]
 subtitle_text = [xl4, fw.medium,  mr/st/1, mr/sb/2, text/gray/8]
@@ -49,7 +47,7 @@ span = [pd/1]
 form = [db.f, jc.center]
 theme = []  # default background, font, border, etc stuff
 P = [pd/x/2, pd/y/1] # W/"11/12" <-- this should be done optionally
-A = [fc/gray/6, pd/1, pd/x/1,  *hover(fc/gray/9)] #pd/x/4 : again optionally
+A = [fc/gray/6, pd/1, pd/x/1,  hover(fc/gray/9)] #pd/x/4 : again optionally
 stackv = [db.f, flx.col]
 stackh = [db.f, *spacing]
 stackw = [db.f, flx.wrap, jc.center, ]
@@ -62,7 +60,7 @@ _.result = [hidden/""]
 border_style = []
 
 icon_button = [bg/gray/1, ta.center,
-               pd/1, bsw.md,  pd/1,  *hover(bg/gray/2)]
+               pd/1, bsw.md,   *hover(bg/gray/2)]
 
 
 theme = []
@@ -83,7 +81,7 @@ divbutton = [db.f, jc.center]
 expansion_item = [mr/st/0, bg/gray/2, bsw.sm]
 
 inputJbutton = [pd/4, bg/gray/1, flex, jc.center, * border_style]
-select = [fz.sm, mr/"2", bg/"inherit"
+select = [fz.sm,  bg/"inherit"
 
           ]
 selectwbanner = [bt.bd, bdr.md, bd/gray/1, pd/1, mr/x/2]
@@ -93,28 +91,28 @@ infocard = [mr/4]
 
 barpanel = [mr/1]
 
-slider = [H/6, bg/gray/9, bg/opacity/5,
-          db.f, ai.center, mr/1, ]
+slider = [db.f, ai.center]
 circle = [W/6, H/6, bg/gray /
-          7, fc/pink/2, bdr.full, mr/2, *hover(noop/bds.double, noop/bt.bd, bg/gray/1, bd/gray/2)]  # bg/gray/5
+          7, fc/pink/2, bdr.full, mr/x/2, *hover(noop/bds.double, noop/bt.bd, bg/gray/1, bd/gray/2)]  # bg/gray/5
 
 expansion_item = [mr/1, bg/gray/2]
 
 textarea = [fz.sm, fw.bold, fc/gray/6, bg/gray/1, opacity/80,
-            fw.light,  ta.center, pd/1, W/"full", H/"full"]
+            fw.light,  ta.center, pd/1, W/"full"]
 
 textinput = [db.f, jc.center, bt.bd, bdr.md, bd/gray/1]
-input = [bg/gray/1, opacity/80]
+input = [bg/gray/1, opacity/80, pd/1]
 
 
 cell = [fc/gray/6, fz.xl, pd/1, bg/gray/2]
 
-left_cell = [*cell, jc.end, W/"5/12"]
-right_cell = [*cell, jc.start, W/"5/12"]
+left_cell = [*cell,  W/"3/4", ta.end]
+right_cell = [*cell,
+              W/"1/8", ta.start]
 eq_cell = [*cell, jc.center, op.c]
 
 option = []
-label = [db.f, jc.center]
+label = [db.f, jc.center, pd/1, bg/pink/1]
 
 wp = [bg/gray/2, bg/opacity/"25"]
 
@@ -122,7 +120,7 @@ wp = [bg/gray/2, bg/opacity/"25"]
 #W/full or max or screen is not working at all
 #nav  = [container, ppos.fixed, top/0, bg/green/6]
 nav  = [container, top/0] 
-footer = [mr/st/4, bsw._, container]
+footer = [mr/st/4, bsw, container]
 div = []
 
 hr = [mr/st/4, mr/sb/4, bt.bd, bd/gray/"400/20", bg/gray/"400/20", container]
@@ -142,16 +140,14 @@ td = [bt.bd, pd/2, ta.center]
 tr = [[bg/gray/2, fc/gray/6],
       [bg/pink/1, fc/gray/6]]  # for odd/even row  # 'text-gray-600'
 
-tbl = [fz.sm, tbl.auto,  W/full,  ovf/auto, 
-       ovf/x/auto]  # TODO: incorporate into twtags
+tbl = [fz.sm, 'table-auto',  W/full, "table-fixed",  "overflow-auto",
+       "overflow-x-auto"]  # TODO: incorporate into twtags
 
 expansion_container = [mr/st/8, bg/gray/1, shdw.sm, fz.lg]
 
 togglebtn = ["q-ma-md"]
 
-#TODO: use https://github.com/tailwindlabs/tailwindcss-forms
-#'form-checkbox'
-checkbox = []
+checkbox = ['form-checkbox']
 def halign(align="center"):
     """
     align the contents : options are start, end, center, between, evenly, around
@@ -169,9 +165,10 @@ def align(halign="center", valign="center"):
     vertical and horizonal align
     """
     return [db.f, getattr(ai, valign), getattr(jc, halign)]
-
 #Caution keep this at the bottom
 container = [mr/x/auto, container]
 
-default_border = [bd/2, bd/gray/4, bdr.lg]
-dockbar = [*stackh, bg/pink/1, *default_border, jc.center, space/x/2, W/full, H/16]
+
+
+# just keeping it here for later reference
+default_border = [bd/2, bd/gray/2, bdr.sm]

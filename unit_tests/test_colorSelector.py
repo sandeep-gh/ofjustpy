@@ -22,7 +22,7 @@ def launcher(request):
     session_manager = oj.get_session_manager(request.session_id)
     with oj.sessionctx(session_manager):
         colorselector_ = oj.ColorSelector_(
-            "colorselector", pcp=[bg/rose/"200/20"]).event_handle(
+            "colorselector").event_handle(
                         oj.click, on_btn_click)
         
         # select_ = oj.Select_("myselect",
@@ -49,6 +49,7 @@ def launcher(request):
         wp_ = oj.WebPage_("oa", cgens =[colorselector_], template_file='svelte.html', title="myoa")
         wp = wp_()
         wp.session_manager = session_manager
+        oj.get_svelte_safelist(session_manager.stubStore)
     return wp
 
 #jp.Route("/", launcher)
@@ -56,7 +57,14 @@ def launcher(request):
 # request = Dict()
 # request.session_id = "abc"
 # wp = launcher(request)
+# _ss = wp.session_manager.stubStore
+
 # msg = Dict()
+
+# msg.value = 'pink'
+# _ss.MainColorSelector.target.on_click(msg)
+# _ss.colorselector.target.on_click(msg)
+
 # msg.page = wp
 
 # print(wp.session_manager.stubStore.colorselector.target.on_click(msg))

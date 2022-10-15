@@ -38,5 +38,8 @@ def launcher(request):
 
 
 
-app = jp.app
-jp.justpy(launcher, start_server=False)
+# app = jp.app
+# jp.justpy(launcher, start_server=False)
+from starlette.testclient import TestClient
+client = TestClient(app)
+response = client.get('/') 

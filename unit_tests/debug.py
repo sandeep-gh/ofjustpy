@@ -28,8 +28,8 @@ def launcher(request):
                     # oj.Slider_("myslider", range(5), pcp=[bg/green/5]),
                     oj.ColorSelector_("colorselector").event_handle(
                         oj.click, on_btn_click),
-                    oj.ToggleBtn_("togglebtn", glossy=True,
-                                  size="sm", label="atogglebtn", value=False).event_handle(oj.iinput, on_input_change)
+                    oj.ToggleBtn_("togglebtn", glossy=True,j
+                                  size="sm", label="atogglebtn", value=False).event_handle(oj.input, on_input_change)
 
             ]:
                 yield _

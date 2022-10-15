@@ -21,6 +21,9 @@ from tailwind_tags import *
 import ofjustpy as oj
 from addict import Dict
 import justpy as jp
+
+app = jp.build_app()
+
 def on_btn_click(dbref,msg):
     print ("btn clicked ")
     pass
@@ -32,7 +35,7 @@ def launcher(request):
     with oj.sessionctx(session_manager):
         btn_ = oj.Button_("mybtn",
                    value="myval",
-                   text="Click me ", pcp=[bg/blue/100/50]).event_handle(oj.click, on_btn_click)
+                          text="Click me ",   pcp=[bg/blue/"100/50"]).event_handle(oj.click, on_btn_click)
 
         wp_ = oj.WebPage_("oa", cgens =[btn_], template_file='svelte.html', title="myoa")
         wp = wp_()
@@ -40,7 +43,6 @@ def launcher(request):
 
 #jp.Route("/", launcher)
 
+app.add_jproute("/", launcher)
 
-
-app = jp.app
-jp.justpy(launcher, start_server=False)
+#jp.justpy(launcher, start_server=False)

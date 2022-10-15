@@ -23,8 +23,6 @@ curr_session_ctx = None
 # if session_ctx already exists for session_id return that.
 session_ctx_store = Dict() #a global variable
 
-
-
 def get_session_manager(session_id):
     global session_ctx_store
     if session_id in session_ctx_store:

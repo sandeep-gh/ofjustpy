@@ -9,12 +9,15 @@ from typing import List, AnyStr, Callable, Any
 from addict import Dict
 import justpy as jp
 from .ui_styles import basesty, sty
-from tailwind_tags import tstr, W, full, jc, twcc2hex, bg, onetonine, fz
+from tailwind_tags import (tstr, W, full, jc, twcc2hex, bg, onetonine, fz, get_color_instance, outline, offset, black, olsty, green, W, conc_twtags, hidden, db, invisible)
 from .tracker import trackStub
 from dpath.util import set as dset, search as dsearch
 from .dpathutils import dget, dnew
 import traceback
+import types
 StubFunc_T = Callable[Any, Any]
+
+
 
 
 #https://stackoverflow.com/questions/44664040/type-hints-with-user-defined-classes/44664064#44664064
@@ -103,12 +106,12 @@ class StackD(jp.Div):
         super().addItems(cgens)
         
         for spath, dbref in self.spathMap.items():
-            dbref.set_class('hidden')
+            dbref.add_twsty_tags(hidden)
 
         self.selected_card_spath = cgens[0].spath
         selected_dbref = self.spathMap[self.selected_card_spath]
-        selected_dbref.remove_class('hidden')
-        selected_dbref.set_class('flex') #TODO: only if there was flex originally
+        selected_dbref.remove_twsty_tags(hidden)
+        selected_dbref.add_twsty_tags(db.f) #TODO: only if there was flex originally
     def bring_to_front(self, spath):
         '''
         tapk: the target apk of du which needs to be brought in front
@@ -117,11 +120,11 @@ class StackD(jp.Div):
         tapk = spath  # f'{self.apk}_{tlid}'
         if tapk in self.spathMap.keys():
             #hide the current front
-            self.spathMap[self.selected_card_spath].set_class('hidden')
+            self.spathMap[self.selected_card_spath].add_twsty_tags(hidden)
             #make the selected card visible
             selected_dbref = self.spathMap[tapk]
-            selected_dbref.remove_class('hidden')
-            selected_dbref.set_class('flex')  # workaround for eat-flex bug
+            selected_dbref.remove_twsty_tags(hidden)
+            selected_dbref.add_twsty_tags(db.f)  # workaround for eat-flex bug
 
             self.selected_card_spath = tapk
         else:
@@ -139,8 +142,8 @@ class Stub:
         self.args = args
 
         self.postrender = kwargs.pop('postrender', None)
-        if self.key == "wp":
-            print(kwargs)
+        # if self.key == "wp":
+        #     print(kwargs)
         self.cgens = kwargs.pop('cgens', None)
         redirects = kwargs.pop('redirects', None)
         self.redirects = None
@@ -149,10 +152,20 @@ class Stub:
         self.kwargs = kwargs
         pass
 
+    def update_twsty_tags(self, *args):
+        twsty_tags = self.kwargs.get('twsty_tags')
+        self.kwargs.update({'twsty_tags': conc_twtags(*twsty_tags,  *args)})
+
+    def add_cgen(self, cgen):
+        """
+        add a component  stub to cgens
+        """
+
+        self.cgens.append(cgen)
     def __call__(self, a):
         # print(f"calling as function {self.id}")
         # TODO: what about other parameters
-        self.target = self.hcgen(**self.kwargs, a=a)
+        self.target = self.hcgen(**self.kwargs, a=a, id=self.spath)
 
         self.target.stub = self
         if self.postrender:
@@ -212,7 +225,7 @@ def genStubFunc(jpf, stytags):
     @trackStub
     def func(key: AnyStr, **kwargs):
         pcp = kwargs.pop('pcp', [])
-        twsty_tags = [*stytags,  *pcp]
+        twsty_tags = conc_twtags(*stytags,  *pcp)
         return Stub(key, jpf, twsty_tags=twsty_tags, **kwargs)
     return func
 
@@ -259,14 +272,14 @@ def SubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp: List = [], heading
     # = genStubFunc(jp.Div, sty.subheading_box)
     spanl_ = Span_("headingL", text=heading_text, pcp=heading_text_sty)
     spanm_ = Span_("headingR", text=heading_text, pcp=[
-        *heading_text_sty, "invisible"])
+        *heading_text_sty, invisible])
     spanx_ = Span_("headingR", text=heading_text, pcp=[
-        *heading_text_sty, "invisible"])
+        *heading_text_sty, invisible])
     # spanr_ = Span_("headingR", text=heading_text, pcp=[
     #     *heading_text_sty, "invisible"])
     return Stub(key,
                 jp.Div,
-                twsty_tags=[*pcp, *sty.subheading_box],
+                twsty_tags= conc_twtags(*pcp, *sty.subheading_box),
                 postrender=lambda dbref,  spanl_=spanl_, spanm_=spanm_: spanx_(spanm_(spanl_(dbref))),
                 **kwargs)
 
@@ -279,22 +292,26 @@ def LabeledInput_(key: AnyStr, label: AnyStr, placeholder: AnyStr,  changeonly=T
             "input", placeholder=placeholder, type=input_type)
     else:
         input_ = Input_("input", placeholder=placeholder, type=input_type)
-    return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, span_=span_, input_=input_: input_(span_(dbref)))
+    return Stub(key,
+                jp.Label,
+                twsty_tags=conc_twtags(*pcp, *sty.label, *sty.default_border),
+                postrender=lambda dbref, span_=span_, input_=input_: input_(span_(dbref)))
 
 @trackStub
 def Checkbox_(key:AnyStr, placeholder:AnyStr, val=False, pcp=[], **kwargs):
+    #TODO: 'form-checkbox'
     cbox_ = Input_(f"{key}cbox", type='checkbox',  value=val,
-                   pcp=['form-checkbox'])
+                   pcp=[])
     span_ = Span_(f"{key}span", text=placeholder, pcp=[fz.sm])
-    return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, span_=span_, cbox_=cbox_: cbox_(span_(dbref)))
+    return Stub(key, jp.Label, twsty_tags=conc_twtags(*pcp, *sty.label), postrender=lambda dbref, span_=span_, cbox_=cbox_: cbox_(span_(dbref)))
     
 
 @trackStub
 def CheckboxInput_(key: AnyStr, placeholder: AnyStr, pcp=[], **kwargs):
-    # TODO: make form-checkbox firstclass
-    cbox_ = Input_(f"{key}cbox", type="checkbox", pcp=['form-checkbox'])
+    # TODO: make form-checkbox firstclass : 'form-checkbox'
+    cbox_ = Input_(f"{key}cbox", type="checkbox", pcp=[])
     input_ = InputChangeOnly_(f"{key}inp", type="text", placeholder=placeholder)
-    return Stub(key, jp.Label, twsty_tags=[*pcp, *sty.label], postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)), **kwargs)
+    return Stub(key, jp.Label, twsty_tags=conc_twtags(*pcp, *sty.label), postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)), **kwargs)
 
 
 #@trackStub
@@ -308,7 +325,7 @@ def Subsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp=[], *
                    )
 
 def Prose_(key:AnyStr, text:AnyStr, pcp=[], **kwargs):
-    return P_(key, text=text, pcp = [*pcp, *sty.prose], **kwargs)
+    return P_(key, text=text,  pcp=conc_twtags(*pcp, *sty.prose), **kwargs)
                    
 def KeyValue_(key: AnyStr, keyt: AnyStr, valuet: AnyStr, readonly=True, pcp=[], **kwargs):
     key_ = Span_("keyt", text=keyt, pcp=sty.left_cell)
@@ -328,34 +345,84 @@ def Subsubsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp: L
         "heading", heading_text, pcp=[]), Halign_(content_, align="center")], pcp=pcp, **kwargs)
 
 
+def Barpanel_(key: AnyStr, pcp: List= [], **kwargs):
+    return StackH_(key, pcp=conc_twtags(*sty.barpanel, *pcp), **kwargs)
+
 def WithBanner_(key: AnyStr, banner_text: AnyStr, component_: Callable, pcp: List = [], **kwargs):
-    return StackH_(key, cgens=[Span_("banner", text=banner_text), component_], pcp=pcp, **kwargs)
+    return StackH_(key,
+                   cgens=[Valign_(Span_("banner", text=banner_text)), component_],
+                   pcp=pcp, **kwargs)
 
 
 
 
 @trackStub
-def Halign_(content_: Callable, align="center", pcp=[], **kwargs):
+def Halign_(content_: Callable, align="center", pcp=[], key=None, **kwargs):
     """
     tstub: target stub, i.e., the one needs to be aligned
     """
-    return Stub(f"Halign{content_.key}",  jp.Div, twsty_tags=[
-        *pcp, *sty.halign(align)],     postrender=lambda dbref, tstub=content_: tstub(dbref), **kwargs)
+    if not key:
+        key = f"Halign{content_.key}"
+        
+    return Stub(key,
+                jp.Div,
+                twsty_tags=conc_twtags(*sty.halign(align), *pcp),
+                postrender=lambda dbref,
+                tstub=content_: tstub(dbref),
+                **kwargs)
+
+@trackStub
+def Valign_(content_: Callable, align="center", pcp=[], key=None, **kwargs):
+    """
+    tstub: target stub, i.e., the one needs to be aligned
+    """
+    if not key:
+        key = f"Halign{content_.key}"
+    return Stub(key,
+                jp.Div,
+                twsty_tags=conc_twtags(*sty.valign(align), *pcp ),
+                postrender=lambda dbref, tstub=content_: tstub(dbref),
+                **kwargs
+                )
+
+@trackStub
+def Align_(content_: Callable, halign="center",  valign="center", key = None, pcp=[], **kwargs):
+    """
+    tstub: align vertically and horizontally
+    """
+    if not key:
+        key = f"align{content_.key}"
+    return Stub(key,
+                jp.Div,
+                twsty_tags=conc_twtags(*sty.align(halign, valign), *pcp),
+                postrender=lambda dbref, tstub=content_: tstub(dbref), **kwargs)
+
 
 
 @trackStub
 def ExpansionContainer_(key: AnyStr, label: AnyStr, content_: AnyStr, pcp: List=[]):
-    return Stub(key, jp.QExpansionItem, twsty_tags=[*pcp, *sty.expansion_container], postrender=lambda dbref, tstub=content_:tstub(dbref), dense=True, header_class='bg-grey-1', label=label,)
+    return Stub(key, jp.QExpansionItem,
+                twsty_tags=conc_twtags(*sty.expansion_container, *pcp),
+                postrender=lambda dbref, tstub=content_:tstub(dbref), dense=True, header_class='bg-grey-1', label=label
+                )
 
 
 def SubTitle_(key:AnyStr, title_text:AnyStr, pcp=[], align="center", **kwargs):
-    return Halign_(Span_(key, text=title_text, pcp=[*sty.subtitle_text, *pcp]), align=align)
+    return Halign_(Span_(key,
+                         text=title_text,
+                         pcp=conc_twtags(*sty.subtitle_text, *pcp)
+                         ),
+                   align=align)
 
 
 
 # TODO: implement default value
 def Title_(key:AnyStr, title_text:AnyStr, pcp=[], align="center", **kwargs):
-    return Halign_(Span_(key, text=title_text, pcp=[*sty.title_text, *pcp]), align=align)
+    return Halign_(Span_(key,
+                         text=title_text,
+                         pcp=conc_twtags(*sty.title_text, *pcp)
+                         ),
+                   align=align)
                    
 
 @trackStub
@@ -365,7 +432,18 @@ def Slider_(key: AnyStr, itemiter: List, pcp: List = [], **kwargs):
         #       " ", msg.value, " ", dbref.slider)
         # pass the value of selected circle to slider
         dbref.slider.value = msg.value
+        slider = dbref.slider
+        #TODO: what is slider.selecte_circle evaluating to
+        if slider.selected_circle is not None:
+            slider.selected_circle.remove_twsty_tags(outline/offset/2, outline/black/0, outline/2, olsty.double)
 
+        slider.selected_circle = dbref
+        slider.selected_circle.add_twsty_tags(outline/offset/2, outline/black/0, outline/2, olsty.double)
+
+        # slider.selected_circle.set_class("outline-black")
+        # slider.selected_circle.set_class("outline-2")
+        # slider.selected_circle.set_class("outline-double")
+        
         pass
     circle_stubs = [Circle_(f"c{_}", text=str(_), value=_).event_handle(
         EventType.click, on_circle_click) for _ in itemiter]
@@ -375,7 +453,7 @@ def Slider_(key: AnyStr, itemiter: List, pcp: List = [], **kwargs):
             cs(dbref)
             cs.target.slider = dbref
         dbref.circle_stubs = circle_stubs
-
+        dbref.selected_circle = None
     # return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.slider], postrender=lambda dbref, circle_stubs=circle_stubs: [_(dbref) for _ in circle_stubs])
     # The click on Slider should come to this function; its value updated then passed to user
 
@@ -384,8 +462,11 @@ def Slider_(key: AnyStr, itemiter: List, pcp: List = [], **kwargs):
         if 'click' in dbref.stub.eventhandlers:
             dbref.stub.eventhandlers['click'](dbref, msg)
         pass
-    stub = Stub(key, jp.Div, twsty_tags=[
-                *pcp, *sty.slider], postrender=postrender, redirects=[('click', on_click_hook)], **kwargs)
+    stub = Stub(key,
+                jp.Div,
+                twsty_tags=conc_twtags( *sty.slider, *pcp),
+                postrender=postrender, redirects=[('click', on_click_hook)],
+                **kwargs)
     stub.circle_stubs = circle_stubs
     return stub
 
@@ -402,7 +483,7 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
     def on_main_color_select(dbref, msg):
         # pass the selection to parent component
         #traceback.print_stack(file=sys.stdout)
-        print ("calling main_color_select")
+
         dbref.colorSelector.maincolor_value = msg.value
         colortag = sty.get_color_tag(dbref.colorSelector.maincolor_value)
         dbref.colorSelector.component_clicked = 'mainColorSelector'
@@ -410,52 +491,63 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
     mainColorSelector_ = MainColorSelector_("MainColorSelector").event_handle(
         EventType.click, on_main_color_select)
 
-    def on_slider_select(dbref, msg):
+    def on_slider_select(slider, msg):
         # whatever value is computed pass to colorselector
         # pass the selection to parent component
-        print ("on slider select")
-        dbref.colorSelector.slider_value = int(msg.value)
-        dbref.colorSelector.component_clicked = 'slider'
-        pass
+        slider.colorSelector.slider_value = int(msg.value)
+        slider.colorSelector.component_clicked = 'slider'
+
     shades_ = Slider_("Shades", range(1, 10)).event_handle(
         EventType.click, on_slider_select)
 
     def update_slider(colortag, shades_=shades_):
-        print ("update slider")
+
         for cs in shades_.circle_stubs:
             cref = cs.target
             shid = int(cref.value)
-            cref.twcc = f"{colortag}-{shid}00"
+            #cref.twcc = f"{colortag}-{shid}00"
             # TODO: also update twsty_tags
-            print("update slider = ", f"bg-{colortag}-{shid}00")
-            cref.set_class(f"bg-{colortag}-{shid}00")
+            #print("update slider = ", f"bg-{colortag}-{shid}00")
+            #cref.set_class(f"bg-{colortag}-{shid}00")
+            new_color = bg/get_color_instance(colortag)/shid
+            cref.add_twsty_tags(new_color)
 
+
+    def update_selected_shade():
+        pass
+    
     def postrender(dbref):
-        dbref.addItems([mainColorSelector_, shades_])
+        dbref.addItems([Halign_(mainColorSelector_), Halign_(shades_)])
         shades_.target.colorSelector = dbref
         mainColorSelector_.target.colorSelector = dbref
         dbref.maincolor_value = "blue"
         dbref.slider_value = 5  # the default value
         dbref.component_clicked = None
-
+        dbref.shades_ = shades_
     def on_click_hook(dbref, msg):
-        print ("CS: on_click_hook")
+        print ("calling:colorSelctor:on_click_hook")
         main_color = dbref.maincolor_value
-        shade = dbref.slider_value
 
-        msg.value = twcc2hex[main_color][onetonine[shade]]
         match dbref.component_clicked:
             case 'mainColorSelector':
                 update_slider(dbref.maincolor_value)
             case None:
                 pass
             case 'slider':
+                shade = dbref.slider_value
+                msg.value = twcc2hex[main_color][onetonine[shade]]
+                update_selected_shade()
                 if 'click' in dbref.stub.eventhandlers:
                     dbref.stub.eventhandlers['click'](dbref, msg)
     # TODO: fix spacing
     # TODO: event handling
     # return StackH_(key, cgens=[mainColorSelector_, shades_])
-    return Stub(key, jp.Div, twsty_tags=[*pcp, *sty.stackh], postrender=postrender, redirects=[('click', on_click_hook)], **kwargs)
+    return Stub(key,
+                jp.Div,
+                twsty_tags=conc_twtags( *sty.stackv, *sty.default_border, *pcp),
+                postrender=postrender,
+                redirects=[('click', on_click_hook)],
+                **kwargs)
 
 
 # TODO: toggleBtn, expansionContainer
@@ -466,7 +558,11 @@ def Form_(key: AnyStr, content_: Callable, submit_: Callable, pcp: List = [], **
     def postrender(dbref, c=content_, s=submit_):
         c(dbref)
         s(dbref)
-    return Stub(key, jp.Form, twsty_tags=[*sty.form, *pcp], postrender=postrender, **kwargs)
+    return Stub(key,
+                jp.Form,
+                twsty_tags=conc_twtags(*sty.form, *pcp),
+                postrender=postrender,
+                **kwargs)
 
 
 @trackStub
@@ -474,7 +570,11 @@ def Button_(key: AnyStr, icon_f: Callable = None, pcp: List = [], **kwargs):
     postrender = None
     if icon_f:
         def postrender(dbref, icon_f=icon_f): return icon_f(dbref)
-    return Stub(key, jp.Button, twsty_tags=[*sty.button, *pcp], postrender=postrender,  **kwargs)
+    return Stub(key,
+                jp.Button,
+                twsty_tags=conc_twtags(*sty.button, *pcp),
+                postrender=postrender,
+                **kwargs)
 
 # seriously wrong with select -- default val is not working
 
@@ -484,18 +584,32 @@ def Select_(key: AnyStr, options: List, pcp: List = [], **kwargs):
     """
     to use default option, pass it to kwargs with text and value
     """
-    return Stub(key, jp.Select, twsty_tags=[*sty.select, *pcp], postrender=lambda dbref: [_(dbref) for _ in options],  **kwargs)
+    return Stub(key,
+                jp.Select,
+                twsty_tags=conc_twtags(*sty.select, *pcp),
+                postrender=lambda dbref: [_(dbref) for _ in options],
+                **kwargs
+                )
 
 # TODO: how to deal with events at Div level
 
 @trackStub
 def Tr_(key, cgens, isodd=True, pcp=[], **kwargs):
-    return Stub(key, jp.Tr, twsty_tags=[*sty.tr[isodd], *pcp], postrender=lambda dbref, cgens=cgens: [_(dbref) for _ in cgens], **kwargs)
+    return Stub(key,
+                jp.Tr,
+                twsty_tags=conc_twtags(*sty.tr[isodd], *pcp),
+                postrender=lambda dbref, cgens=cgens: [_(dbref) for _ in cgens],
+                **kwargs)
 
 
 @trackStub
 def Table_(key, cgens, pcp=[], **kwargs):
-    return Stub(key, jp.Table, twsty_tags=[*sty.tbl, *pcp], postrender=lambda dbref, cgens=cgens: [_(dbref) for _ in cgens], **kwargs)
+    return Stub(key,
+                jp.Table,
+                twsty_tags=conc_twtags(*sty.tbl, *pcp),
+                postrender=lambda dbref, cgens=cgens: [_(dbref) for _ in cgens],
+                **kwargs
+                )
 
 @trackStub
 def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwargs):
@@ -503,7 +617,12 @@ def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwar
     Put an input next to button
     """
 
-    return Stub(key, jp.Div, twsty_tags=[*sty.centering_div, *sty.spacing, *pcp], postrender=lambda dbref, input_=input_, button_=button_: button_(input_(dbref), **kwargs))
+    return Stub(key,
+                jp.Div,
+                twsty_tags=conc_twtags(*sty.centering_div, *sty.spacing, *pcp),
+                postrender=lambda dbref, input_=input_, button_=button_: button_(input_(dbref),
+                                                                                 **kwargs)
+                )
 
 
 
@@ -528,11 +647,14 @@ def InputJBtn_(key: AnyStr, input_: Callable,  button_: Callable, pcp=[], **kwar
 # short tag for htmlcomponents
 
 
+
+
 @trackStub
 def WebPage_(key: AnyStr,  head_html_stmts: List[AnyStr] = [], cgens: List = [], WPtype: Type[jp.WebPage] = jp.WebPage, pcp = [], **kwargs):
     """
     WPtype: the WebPage class, either jp.WebPage or derived from it, jp.QuasarPage, or ojr.WebPage, 
     """
+    assert not isinstance(cgens, types.GeneratorType)
     def postrender(wp, cgens=cgens):
         # TODO: declare session manager here
         #wp.tailwind = False  # we inject our tailwind
@@ -551,8 +673,12 @@ def WebPage_(key: AnyStr,  head_html_stmts: List[AnyStr] = [], cgens: List = [],
 
 
 
-    stub = WPStub(key, WPtype, twsty_tags=[
-            *sty.wp, *pcp], postrender=postrender, cgens=cgens, **kwargs)
+    stub = WPStub(key,
+                  WPtype,
+                  twsty_tags=conc_twtags(*sty.wp, *pcp),
+                  postrender=postrender,
+                  cgens=cgens,
+                  **kwargs)
     
     # if page_type == 'tailwind':
     #     stub = WPStub(key, WPtype, twsty_tags=[
