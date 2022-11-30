@@ -1,24 +1,46 @@
+import traceback
+import sys
 import logging
 import sys
 if sys:
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
 import collections
+from itertools import chain
 from aenum import Enum
 from typing import List, AnyStr, Callable, Any
 from addict import Dict
 import justpy as jp
 from .ui_styles import basesty, sty
-from tailwind_tags import (tstr, W, full, jc, twcc2hex, bg, onetonine, fz, get_color_instance, outline, offset, black, olsty, green, W, conc_twtags, hidden, db, invisible)
+from tailwind_tags import (tstr,
+                           W,
+                           full,
+                           jc,
+                           twcc2hex,
+                           bg,
+                           onetonine,
+                           fz,
+                           get_color_instance,
+                           outline,
+                           offset,
+                           black,
+                           olsty,
+                           green,
+                           W,
+                           conc_twtags,
+                           hidden,
+                           db,
+                           invisible
+                           )
+
 from .tracker import trackStub
 from dpath.util import set as dset, search as dsearch
 from .dpathutils import dget, dnew
 import traceback
 import types
+from .ofjustpy_utils import traverse_component_hierarchy
+from .data_validator import validate, InputRequired
 StubFunc_T = Callable[Any, Any]
-
-
-
 
 #https://stackoverflow.com/questions/44664040/type-hints-with-user-defined-classes/44664064#44664064
 from typing import Type
@@ -38,7 +60,6 @@ class Nav(jp.Nav):
     """
 
     """
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.spathMap = Dict(track_changes=True)
@@ -149,9 +170,19 @@ class Stub:
         self.redirects = None
         if redirects:
             self.redirects = Dict(redirects)
+        self.get_value = kwargs.pop('get_value', None)
+        
         self.kwargs = kwargs
+
         pass
 
+    def get_value(self):
+        if self.get_value:
+            self.get_value()
+        # we should fall back to target.value
+        # TBD: implement it later when need arises
+        assert False
+        
     def update_twsty_tags(self, *args):
         twsty_tags = self.kwargs.get('twsty_tags')
         self.kwargs.update({'twsty_tags': conc_twtags(*twsty_tags,  *args)})
@@ -160,8 +191,10 @@ class Stub:
         """
         add a component  stub to cgens
         """
+        assert self.cgens is not None
+        self.cgens = chain(self.cgens, [cgen])
 
-        self.cgens.append(cgen)
+        
     def __call__(self, a):
         # print(f"calling as function {self.id}")
         # TODO: what about other parameters
@@ -180,8 +213,12 @@ class Stub:
             if self.redirects and event_type in self.redirects:
                 # self.target.on(event_type, handler)
                 # call local handler
+                #print ("redirecting ", event_type, " to ", self.redirects[event_type])
                 self.target.on(event_type, self.redirects[event_type])
             else:
+                #print ("handle event: ", event_type)
+                #print ("handle event: ", handler)
+                #print (self.key)
                 self.target.on(event_type, handler)
 
         if self.cgens:
@@ -285,33 +322,70 @@ def SubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp: List = [], heading
 
 
 @trackStub
-def LabeledInput_(key: AnyStr, label: AnyStr, placeholder: AnyStr,  changeonly=True, input_type="text", pcp=[], **kwargs):
-    span_ = Span_("iname", text=label, pcp=sty.span)
+def LabeledInput_(key: AnyStr,
+                  label: AnyStr,
+                  placeholder: AnyStr,
+                  changeonly=True,
+                  input_type="text",
+                  data_validators = [],
+                  pcp=[],
+                  
+                  **kwargs):
+    span_ = Span_(f"{key}_iname", text=label, pcp=sty.span)
     if changeonly:
-        input_ = InputChangeOnly_(
-            "input", placeholder=placeholder, type=input_type)
+        input_ = InputChangeOnly_(key,
+                                  placeholder=placeholder,
+                                  type=input_type,
+                                  data_validators=data_validators
+                                  )
     else:
-        input_ = Input_("input", placeholder=placeholder, type=input_type)
-    return Stub(key,
+        input_ = Input_(key,
+                        placeholder=placeholder,
+                        type=input_type,
+                        data_validators=data_validators
+                        )
+    return Stub(f"{key}_libox",
                 jp.Label,
                 twsty_tags=conc_twtags(*pcp, *sty.label, *sty.default_border),
-                postrender=lambda dbref, span_=span_, input_=input_: input_(span_(dbref)))
+                #postrender=lambda dbref, span_=span_, input_=input_: input_(span_(dbref)),
+                cgens = [span_, input_],
+                get_value = lambda : input_.target.value
+                )
 
 @trackStub
-def Checkbox_(key:AnyStr, placeholder:AnyStr, val=False, pcp=[], **kwargs):
+def Checkbox_(key:AnyStr, label:AnyStr, pcp=[], cbox_attrs={}, span_attrs={}, **kwargs):
     #TODO: 'form-checkbox'
-    cbox_ = Input_(f"{key}cbox", type='checkbox',  value=val,
-                   pcp=[])
-    span_ = Span_(f"{key}span", text=placeholder, pcp=[fz.sm])
-    return Stub(key, jp.Label, twsty_tags=conc_twtags(*pcp, *sty.label), postrender=lambda dbref, span_=span_, cbox_=cbox_: cbox_(span_(dbref)))
+    cbox_ = Input_(f"{key}cbox", type='checkbox', 
+                   pcp=[], **cbox_attrs)
+    span_ = Span_(f"{key}span",
+                  text=label,
+                  pcp=[fz.sm],
+                  **span_attrs
+                  )
+    return Stub(key,
+                jp.Label,
+                twsty_tags=conc_twtags(*pcp, *sty.label),
+                cgens = [span_, cbox_],
+                **kwargs
+                #postrender=lambda dbref, span_=span_, cbox_=cbox_: cbox_(span_(dbref))
+                )
     
 
 @trackStub
-def CheckboxInput_(key: AnyStr, placeholder: AnyStr, pcp=[], **kwargs):
+def CheckboxInput_(key: AnyStr,
+                   pcp=[],
+                   cbox_attrs={},
+                   input_attrs={},
+                   **kwargs):
     # TODO: make form-checkbox firstclass : 'form-checkbox'
-    cbox_ = Input_(f"{key}cbox", type="checkbox", pcp=[])
-    input_ = InputChangeOnly_(f"{key}inp", type="text", placeholder=placeholder)
-    return Stub(key, jp.Label, twsty_tags=conc_twtags(*pcp, *sty.label), postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)), **kwargs)
+    cbox_ = Input_(f"{key}cbox", type="checkbox", pcp=[], **cbox_attrs)
+    input_ = InputChangeOnly_(f"{key}inp", type="text", **input_attrs)
+    return Stub(key,
+                jp.Label,
+                twsty_tags=conc_twtags(*pcp, *sty.label),
+                #postrender=lambda dbref, cbox_=cbox_, input_=input_: input_(cbox_(dbref)),
+                cgens = [cbox_, input_],
+                **kwargs)
 
 
 #@trackStub
@@ -341,8 +415,11 @@ def SubsubheadingBanner_(key: AnyStr, heading_text: AnyStr, pcp=[], **kwargs):
 
 
 def Subsubsection_(key: AnyStr, heading_text: AnyStr, content_: Callable, pcp: List = [], **kwargs):
-    return StackV_(key, cgens=[SubsubheadingBanner_(
-        "heading", heading_text, pcp=[]), Halign_(content_, align="center")], pcp=pcp, **kwargs)
+    return StackV_(key,
+                   cgens=[SubsubheadingBanner_("heading", heading_text),
+                          Halign_(content_, align="center")],
+                   pcp=pcp,
+                   **kwargs)
 
 
 def Barpanel_(key: AnyStr, pcp: List= [], **kwargs):
@@ -367,8 +444,8 @@ def Halign_(content_: Callable, align="center", pcp=[], key=None, **kwargs):
     return Stub(key,
                 jp.Div,
                 twsty_tags=conc_twtags(*sty.halign(align), *pcp),
-                postrender=lambda dbref,
-                tstub=content_: tstub(dbref),
+                cgens = [content_],
+                #postrender=lambda dbref, tstub=content_: tstub(dbref),
                 **kwargs)
 
 @trackStub
@@ -381,7 +458,8 @@ def Valign_(content_: Callable, align="center", pcp=[], key=None, **kwargs):
     return Stub(key,
                 jp.Div,
                 twsty_tags=conc_twtags(*sty.valign(align), *pcp ),
-                postrender=lambda dbref, tstub=content_: tstub(dbref),
+                cgens  = [content_],
+                #postrender=lambda dbref, tstub=content_: tstub(dbref),
                 **kwargs
                 )
 
@@ -395,7 +473,9 @@ def Align_(content_: Callable, halign="center",  valign="center", key = None, pc
     return Stub(key,
                 jp.Div,
                 twsty_tags=conc_twtags(*sty.align(halign, valign), *pcp),
-                postrender=lambda dbref, tstub=content_: tstub(dbref), **kwargs)
+                cgens=[content_],
+                #postrender=lambda dbref, tstub=content_: tstub(dbref),
+                **kwargs)
 
 
 
@@ -403,7 +483,10 @@ def Align_(content_: Callable, halign="center",  valign="center", key = None, pc
 def ExpansionContainer_(key: AnyStr, label: AnyStr, content_: AnyStr, pcp: List=[]):
     return Stub(key, jp.QExpansionItem,
                 twsty_tags=conc_twtags(*sty.expansion_container, *pcp),
-                postrender=lambda dbref, tstub=content_:tstub(dbref), dense=True, header_class='bg-grey-1', label=label
+                cgens=[content_],
+                dense=True,
+                header_class='bg-grey-1',
+                label=label
                 )
 
 
@@ -445,7 +528,7 @@ def Slider_(key: AnyStr, itemiter: List, pcp: List = [], **kwargs):
         # slider.selected_circle.set_class("outline-double")
         
         pass
-    circle_stubs = [Circle_(f"c{_}", text=str(_), value=_).event_handle(
+    circle_stubs = [Circle_(f"{key}_c{_}", text=str(_), value=_).event_handle(
         EventType.click, on_circle_click) for _ in itemiter]
 
     def postrender(dbref, circle_stubs=circle_stubs):
@@ -473,9 +556,9 @@ def Slider_(key: AnyStr, itemiter: List, pcp: List = [], **kwargs):
 
 def MainColorSelector_(key: AnyStr, **kwargs):
     color_list = twcc2hex.keys()
-    all_options = [Option_(f"opt_{option}", text=option, value=option, pcp=[bg/sty.get_color_tag(option)/5])
+    all_options = [Option_(f"{key}_opt_{option}", text=option, value=option, pcp=[bg/sty.get_color_tag(option)/5])
                    for option in color_list]
-    return Select_(key, all_options, **kwargs)
+    return Select_(key, all_options, value="rose", **kwargs)
 
 
 @trackStub
@@ -488,7 +571,7 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
         colortag = sty.get_color_tag(dbref.colorSelector.maincolor_value)
         dbref.colorSelector.component_clicked = 'mainColorSelector'
         pass
-    mainColorSelector_ = MainColorSelector_("MainColorSelector").event_handle(
+    mainColorSelector_ = MainColorSelector_(f"{key}_MCS").event_handle(
         EventType.click, on_main_color_select)
 
     def on_slider_select(slider, msg):
@@ -497,7 +580,7 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
         slider.colorSelector.slider_value = int(msg.value)
         slider.colorSelector.component_clicked = 'slider'
 
-    shades_ = Slider_("Shades", range(1, 10)).event_handle(
+    shades_ = Slider_(f"{key}_Shades", range(1, 10)).event_handle(
         EventType.click, on_slider_select)
 
     def update_slider(colortag, shades_=shades_):
@@ -525,7 +608,7 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
         dbref.component_clicked = None
         dbref.shades_ = shades_
     def on_click_hook(dbref, msg):
-        print ("calling:colorSelctor:on_click_hook")
+
         main_color = dbref.maincolor_value
 
         match dbref.component_clicked:
@@ -554,19 +637,58 @@ def ColorSelector_(key: AnyStr, pcp: List = [], **kwargs):
 
 # TODO: check event_handle for form
 @trackStub
-def Form_(key: AnyStr, content_: Callable, submit_: Callable, pcp: List = [], **kwargs):
-    def postrender(dbref, c=content_, s=submit_):
-        c(dbref)
-        s(dbref)
+def Form_(key: AnyStr,
+          content_: Callable,
+          submit_: Callable,
+          cgens:List = [], 
+          pcp: List = [],
+          form_type = jp.Form,
+          **kwargs):
+    def postrender(dbref):
+        # c(dbref)
+        # s(dbref)
+        pass
+
+    stubStore = kwargs.get('stubStore', None)
+    
+    def on_submit_validate_hook(dbref, msg):
+        #print ("validate before calling submit: ")
+        success = True
+        # a dict to store all the inputs and their values
+        form_inputs_value_dict = Dict()
+        for cpath, citem, pitem in traverse_component_hierarchy(dbref):
+            # print ("cpath, citem =", cpath, citem)
+
+            if citem.stub.hcgen in [jp.InputChangeOnly, jp.Input]:
+                #print ("cpath, citem =", cpath, citem)
+                
+                if 'data_validators' in citem.stub.kwargs:
+                    #print ("got data validators ")
+                    data_validators = citem.stub.kwargs.get('data_validators')
+                    if not validate(data_validators, citem.value, stubStore):
+                        success = False
+                    form_inputs_value_dict[citem.stub.key] = citem.value
+
+                    
+                    
+        # call the actual registered handler
+        if success:
+            dbref.stub.eventhandlers['submit'](dbref, msg, form_inputs_value_dict)
+        else:
+            print ('failure during validation..not invoking submit function')
+            
+        
     return Stub(key,
                 jp.Form,
+                cgens = [*cgens, content_, submit_],
                 twsty_tags=conc_twtags(*sty.form, *pcp),
-                postrender=postrender,
+                redirects=[('submit', on_submit_validate_hook)],
+                #postrender=postrender,
                 **kwargs)
 
 
 @trackStub
-def Button_(key: AnyStr, icon_f: Callable = None, pcp: List = [], **kwargs):
+def Button_(key: AnyStr, icon_f: Callable = None, pcp: List = [], cgens = [], **kwargs):
     postrender = None
     if icon_f:
         def postrender(dbref, icon_f=icon_f): return icon_f(dbref)
@@ -574,6 +696,7 @@ def Button_(key: AnyStr, icon_f: Callable = None, pcp: List = [], **kwargs):
                 jp.Button,
                 twsty_tags=conc_twtags(*sty.button, *pcp),
                 postrender=postrender,
+                cgens = cgens,
                 **kwargs)
 
 # seriously wrong with select -- default val is not working
@@ -582,15 +705,28 @@ def Button_(key: AnyStr, icon_f: Callable = None, pcp: List = [], **kwargs):
 @trackStub
 def Select_(key: AnyStr, options: List, pcp: List = [], **kwargs):
     """
-    to use default option, pass it to kwargs with text and value
+    to use default option, pass it to kwargs as  value. 
+
+    When an item is selected from a select ui element, the element
+    itself is altered. Its state has changed. So it needs 
+    to be re-rendered. Often the rendering looses information 
+    about what the user has selected. The on_click_hook fixes 
+    that. 
     """
+    def on_click_hook(dbref, msg):
+        print("in selector: on_click_hook ")
+        dbref.value = msg.value
+        if 'click' in dbref.stub.eventhandlers:
+            dbref.stub.eventhandlers['click'](dbref, msg)
+            
     return Stub(key,
                 jp.Select,
                 twsty_tags=conc_twtags(*sty.select, *pcp),
                 postrender=lambda dbref: [_(dbref) for _ in options],
+                redirects=[('click', on_click_hook)],
                 **kwargs
                 )
-
+ 
 # TODO: how to deal with events at Div level
 
 @trackStub

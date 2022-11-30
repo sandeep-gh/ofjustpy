@@ -1,4 +1,4 @@
-
+import functools
 from .dpathutils import walker as dictWalker
 from tailwind_tags import *
 default_tags = [f"'{_}'" for _ in 
@@ -90,3 +90,26 @@ def get_svelte_safelist(stubStore):
 # 'bg-teal-500',
 # 'bg-violet-500',
 # 'bg-yellow-500',        
+
+def traverse_component_hierarchy(rdbref):
+    """
+    recursively traverse html components contained with a 
+    component
+    """
+    for cpath, cbref in rdbref.spathMap.items():
+        yield from traverse_component_hierarchy(cbref)
+        yield (cpath, cbref, rdbref)
+
+        
+def csrfprotect(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        wp = func(*args, **kwargs)
+        #TBD: get SECRET_KEY from whereever  secret key should be picked. 
+        SECRET_KEY="Pls use a good professional secret key"
+        csrf_cookie_name = "csrftoken"
+        csrf_secret='shhshh2'
+        wp.cookies[csrf_cookie_name] = 'shhshh2'
+        
+        return wp
+    return wrapper

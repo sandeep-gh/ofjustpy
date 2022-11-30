@@ -15,8 +15,6 @@ ul = [mr/2, pd/2, "list-disc", "list-inside"]
 ol = [mr/2, pd/2, W/"1/2", "list-disc", "list-inside"]
 li = []
 img = [mr/2, pd/2]
-# ?? para.mr.sb = 5
-# type = "button"
 button = [bg/gray/1, fc/gray/6,  mr/sr/1, mr/sb/1, pd/x/4, pd/y/2, bold, olsty._, bsw._, bsw.sm,
            bold,  tt.u, *hover(noop/bsw.md, bg/gray/2, outline/4, bdr.md)]
 

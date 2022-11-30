@@ -16,17 +16,23 @@ def launcher(request):
         #traceback.print_stack(file=sys.stdout)
         #print (msg)
         print ('in input change')
-        print ('value = ', msg.value)
+        print (msg)
+        print ('value = ', msg.checked)
         pass
         
     with oj.sessionctx(session_manager):
-        target_ = oj.Halign_(oj.LabeledInput_(
-                                 "labeldinput",
-                                 "Input a value", "30").event_handle(oj.change,
-                                                                     on_input_change
-                                                                     )
+        target_ = oj.Halign_(oj.Checkbox_("Acbox",
+                                          "Send stuff",
+                                          cbox_attrs={'checked':True}
+                                          ).event_handle(oj.change,
+                                                                   on_input_change
+                                                                   )
                              )
-        wp_ = oj.WebPage_("oa", cgens =[target_], template_file='svelte.html', title="myoa")
+        wp_ = oj.WebPage_("oa",
+                          cgens =[target_],
+                          template_file='svelte.html',
+                          title="myoa"
+                          )
         wp = wp_()
         wp.session_manager = session_manager
     return wp

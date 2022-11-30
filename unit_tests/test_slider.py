@@ -3,23 +3,32 @@ drop down color not working in firefox
 """
 
 #from tailwind_tags import *
-from tailwind_tags import bg, blue, bd, bdr, gray, H, W, full, pd
+from tailwind_tags import bg, blue, bd, bdr, gray, H, W, full, pd, space, y
 import ofjustpy as oj
 from addict import Dict
 import justpy as jp
-def on_btn_click(dbref,msg):
-    print ("clicked ", msg.value)
+def on_btn_click(dbref, msg):
+    print ("id clicked ", dbref.id, " ", msg.value)
     pass
 
+app = jp.build_app()
 request = Dict()
 request.session_id = "abc"
 
 def launcher(request):
     session_manager = oj.get_session_manager(request.session_id)
     with oj.sessionctx(session_manager):
-        select_ = oj.Slider_("myslider", range(5), pcp=[bg/blue/1]).event_handle(oj.click, on_btn_click) #TODO: slider is messed up
-        select_ = oj.Halign_(oj.WithBanner_("slider", "choose a value", select_, pcp=[bd/2, bd/gray/2, bdr.sm]))
-        wp_ = oj.WebPage_("oa", cgens =[select_], template_file='svelte.html', title="myoa")
+        def stuff():
+            for idx in range(4):
+                slider_ = oj.Slider_(f"myslider_{idx}", range(5), pcp=[bg/blue/1]).event_handle(oj.click, on_btn_click) #TODO: slider is messed up
+                select_ = oj.Halign_(oj.WithBanner_(f"banner_{idx}", "choose a value", slider_, pcp=[bd/2, bd/gray/2, bdr.sm]))
+                yield select_
+                
+        wp_ = oj.WebPage_("oa",
+                          cgens =[_ for _ in stuff()],
+                          template_file='svelte.html',
+                          pcp=[space/y/8],
+                          title="myoa")
 
         wp = wp_()
         wp.session_manager = session_manager
@@ -27,10 +36,10 @@ def launcher(request):
 
 #jp.Route("/", launcher)
 
+app.add_jproute("/", launcher)
 
-
-app = jp.app
-jp.justpy(launcher, start_server=False)
+# app = jp.app
+# jp.justpy(launcher, start_server=False)
 
 # request = Dict()
 # request.session_id = "abc"

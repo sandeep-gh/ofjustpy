@@ -13,7 +13,7 @@ def on_btn_click(dbref,msg):
 request = Dict()
 request.session_id = "abc"
 
-
+app = jp.build_app()
 
 
 all_colors = [slate , gray , zinc , neutral , stone , red , orange , amber , yellow , lime , green , emerald , teal , cyan , sky , blue , indigo , violet , purple , fuchsia , pink , rose]
@@ -69,6 +69,6 @@ def launcher(request):
 
 # print(wp.session_manager.stubStore.colorselector.target.on_click(msg))
 
-app = jp.app
-jp.justpy(launcher, start_server=False)
-
+#app = jp.app
+#jp.justpy(launcher, start_server=False)
+app.add_jproute("/", launcher)

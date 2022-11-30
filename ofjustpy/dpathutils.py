@@ -7,7 +7,12 @@ if os:
     logger.setLevel(logging.DEBUG)
 
 
-from dpath.util import get as dpath_get, new as dpath_new, delete as dpath_delete, set as dset, search as dsearch
+from dpath.util import (get as dpath_get,
+                        new as dpath_new,
+                        delete as dpath_delete,
+                        set as dset,
+                        search as dsearch
+                        )
 from addict import Dict
 
 from dpath.exceptions import PathNotFound
